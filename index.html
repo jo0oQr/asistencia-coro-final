@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Asistencia Coro</title>
+  <link rel="stylesheet" href="estilos.css">
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#8800ff">
+  <link rel="apple-touch-icon" href="icono-192.png">
+</head>
+<body>
+
+  <header>
+    <h1>Asistencia Coro</h1>
+  </header>
+
+  <!-- PANTALLA 1: CALENDARIO -->
+  <main id="pantalla-calendario" class="pantalla">
+    <div class="barra-mes">
+      <button id="btn-anterior">◀</button>
+      <h2 id="titulo-mes"></h2>
+      <button id="btn-siguiente">▶</button>
+    </div>
+
+    <div id="calendario"></div>
+
+    <div id="detalle-dia" class="oculto"></div>
+  </main>
+
+  <!-- PANTALLA 2: CORISTAS -->
+  <main id="pantalla-coristas" class="pantalla oculto">
+    <h2>Coristas</h2>
+
+    <div class="agregar-corista">
+      <input type="text" id="input-nombre" placeholder="Nombre del corista">
+      <button id="btn-agregar">Agregar</button>
+    </div>
+
+    <ul id="lista-coristas"></ul>
+  </main>
+
+  <!-- PANTALLA 3: DÍA SELECCIONADO -->
+  <main id="pantalla-dia" class="pantalla oculto">
+    <button id="btn-volver">← Volver al calendario</button>
+    <h2 id="titulo-dia"></h2>
+
+    <ul id="lista-actividades"></ul>
+
+    <h3>Agregar actividad</h3>
+    <div class="botones-tipo">
+      <button id="add-culto">Culto</button>
+      <button id="add-reunion">Reunión</button>
+      <button id="add-ensayo">Ensayo</button>
+      <button id="add-sinculto">Sin culto</button>
+    </div>
+  </main>
+
+  <!-- PANTALLA 4: ASISTENCIA -->
+  <main id="pantalla-asistencia" class="pantalla oculto">
+    <button id="btn-volver-dia">← Volver al día</button>
+    <h2 id="titulo-asistencia"></h2>
+    <p id="resumen-asistencia"></p>
+    <p id="ultimo-cambio"></p>
+
+    <ul id="lista-asistencia"></ul>
+
+    <button id="btn-cerrar-asistencia">Guardar y cerrar</button>
+  </main>
+
+  <!-- PANTALLA 5: RESUMEN MENSUAL -->
+  <main id="pantalla-resumen" class="pantalla oculto">
+    <div class="barra-mes">
+      <button id="resumen-anterior">◀</button>
+      <h2 id="titulo-resumen"></h2>
+      <button id="resumen-siguiente">▶</button>
+    </div>
+
+    <div class="selector-vista">
+      <button id="vista-corista" class="activo">Por corista</button>
+      <button id="vista-general">General</button>
+    </div>
+
+    <p id="info-resumen"></p>
+    <ul id="lista-resumen"></ul>
+  </main>
+
+  <!-- PANTALLA 6: RESPALDO -->
+  <main id="pantalla-respaldo" class="pantalla oculto">
+    <h2>Respaldo</h2>
+    <p id="info-respaldo"></p>
+
+    <label for="input-usuario">Tu nombre (se anota en los cambios que hagas)</label>
+    <input type="text" id="input-usuario" placeholder="Ej: María">
+
+    <button id="btn-exportar" class="btn-respaldo">Exportar respaldo</button>
+
+    <button id="btn-importar" class="btn-respaldo secundario">Importar respaldo</button>
+    <input type="file" id="archivo-importar" accept=".json" class="oculto">
+  </main>
+
+  <!-- PANTALLA 7: DETALLES DE LA REUNIÓN -->
+  <main id="pantalla-reunion" class="pantalla oculto">
+    <button id="btn-volver-reunion">← Volver al día</button>
+    <h2 id="titulo-reunion"></h2>
+    <p id="ultimo-cambio-reunion"></p>
+        <p id="aviso-reunion" class="oculto">Solo la administradora puede modificar esta reunión. Tú puedes verla.</p>
+
+    <label for="reu-hora-inicio">Hora de inicio</label>
+    <input type="time" id="reu-hora-inicio">
+
+    <label for="reu-oracion-inicial">Oración inicial</label>
+    <input type="text" id="reu-oracion-inicial" list="lista-nombres" placeholder="Elige de la lista o escribe un nombre" autocomplete="off">
+
+    <label for="reu-palabra">Palabra (pasaje de la Biblia que se leyó)</label>
+    <input type="text" id="reu-palabra" placeholder="Ej: Salmo 23 o Juan 3:16" autocomplete="off">
+
+    <label for="reu-monto">Monto en caja</label>
+    <input type="number" id="reu-monto" inputmode="numeric" min="0" step="1" placeholder="Ej: 15000">
+
+    <label for="reu-detalles">Detalles de lo que se habló</label>
+    <textarea id="reu-detalles" rows="6" placeholder="Acuerdos, avisos, temas tratados..."></textarea>
+
+    <label for="reu-oracion-final">Oración final</label>
+    <input type="text" id="reu-oracion-final" list="lista-nombres" placeholder="Elige de la lista o escribe un nombre" autocomplete="off">
+
+    <label for="reu-hora-termino">Hora de término</label>
+    <input type="time" id="reu-hora-termino">
+
+    <datalist id="lista-nombres"></datalist>
+
+    <button id="btn-guardar-reunion" class="btn-respaldo">Guardar detalles</button>
+  </main>
+
+  <!-- MENÚ INFERIOR -->
+  <nav id="menu">
+    <button id="nav-calendario" class="activo">Calendario</button>
+    <button id="nav-coristas">Coristas</button>
+    <button id="nav-resumen">Resumen</button>
+    <button id="nav-respaldo">Respaldo</button>
+  </nav>
+
+  <script src="app.js"></script>
+<script type="module" src="nube.js"></script>
+</body>
+</html>

@@ -1,0 +1,1006 @@
+/* ===== Colores de la app (cámbialos aquí y se actualiza todo) ===== */
+:root {
+  --principal: #7e1563;        /* encabezado, menú, botones principales, Editar */
+  --principal-claro: #f1e0ff;  /* fondo suave del menú activo y del día de hoy */
+  --secundario: #aa1685;       /* botones Quitar y Eliminar */
+  --suave: #ca4aaa;            /* botón Agregar */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f4f8;
+  color: #222;
+}
+
+header {
+  background: var(--principal);
+  color: white;
+  padding: 14px;
+  text-align: center;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+main {
+  padding: 12px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.barra-mes {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.barra-mes h2 {
+  margin: 0;
+  font-size: 18px;
+  text-transform: capitalize;
+}
+
+.barra-mes button {
+  background: var(--principal);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 16px;
+}
+
+/* El calendario es una cuadrícula de 7 columnas (los 7 días) */
+#calendario {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.nombre-dia {
+  text-align: center;
+  font-size: 12px;
+  font-weight: bold;
+  color: #666;
+  padding: 4px 0;
+}
+
+.dia {
+  background: white;
+  border-radius: 8px;
+  min-height: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 6px;
+  font-size: 15px;
+}
+
+.dia.vacio {
+  background: transparent;
+}
+
+/* Lunes, jueves y sábado: días de culto */
+.dia.dia-culto {
+  border: 2px solid var(--principal);
+}
+
+.dia.hoy {
+  background: var(--principal-claro);
+  font-weight: bold;
+}
+
+/* Pantallas y menú */
+.oculto {
+  display: none;
+}
+
+main {
+  padding-bottom: 80px; /* deja espacio para que el menú no tape contenido */
+}
+
+#menu {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  background: white;
+  border-top: 1px solid #ccc;
+}
+
+#menu button {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  background: white;
+  font-size: 15px;
+}
+
+#menu button.activo {
+  background: var(--principal-claro);
+  font-weight: bold;
+  color: var(--principal);
+}
+
+/* Pantalla de coristas */
+.agregar-corista {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.agregar-corista input {
+  flex: 1;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.agregar-corista button {
+  background: var(--suave);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0 16px;
+  font-size: 15px;
+}
+
+#lista-coristas {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#lista-coristas li {
+  background: white;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#lista-coristas li button {
+  background: var(--secundario);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+/* Puntitos de colores en el calendario */
+.dia {
+  cursor: pointer;
+}
+
+.puntos {
+  display: flex;
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.punto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.punto.culto { background: #2e9e5b; }
+.punto.reunion { background: #2f7de1; }
+.punto.ensayo { background: #e69a1c; }
+.punto.sinculto { background: #999; }
+
+/* Pantalla del día */
+#btn-volver {
+  background: none;
+  border: none;
+  color: var(--principal);
+  font-size: 16px;
+  padding: 8px 0;
+}
+
+#titulo-dia {
+  text-transform: capitalize;
+  margin: 6px 0 14px;
+}
+
+#lista-actividades {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+}
+
+#lista-actividades li {
+  background: white;
+  border-radius: 8px;
+  padding: 14px 12px;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#lista-actividades li.pendiente {
+  border: 2px dashed var(--principal);
+}
+
+#lista-actividades li button {
+  background: var(--secundario);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+#lista-actividades li.pendiente button {
+  background: var(--principal);
+}
+
+.botones-tipo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.botones-tipo button {
+  background: white;
+  border: 2px solid var(--principal);
+  color: var(--principal);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 15px;
+}
+
+/* Botones dentro de cada actividad */
+.botones-act {
+  display: flex;
+  gap: 6px;
+}
+
+#lista-actividades li button.btn-asistencia {
+  background: var(--principal);
+}
+
+/* Pantalla de asistencia */
+#btn-volver-dia {
+  background: none;
+  border: none;
+  color: var(--principal);
+  font-size: 16px;
+  padding: 8px 0;
+}
+
+#titulo-asistencia {
+  margin: 6px 0 4px;
+}
+
+#resumen-asistencia {
+  margin: 0 0 12px;
+  color: #555;
+  font-size: 14px;
+}
+
+#lista-asistencia {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#lista-asistencia li {
+  background: white;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+#lista-asistencia li button {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  min-width: 140px;
+  color: white;
+}
+
+.estado-ausente { background: #b0b0b0; }
+.estado-subio { background: #2e9e5b; }
+.estado-abajo { background: #e69a1c; }
+.estado-permiso { background: #2f7de1; }
+.estado-asistio { background: #2e9e5b; }
+
+#btn-cerrar-asistencia {
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  background: var(--principal);
+  color: white;
+  font-size: 16px;
+}
+
+#btn-cerrar-asistencia.cerrada {
+  background: white;
+  color: var(--principal);
+  border: 2px solid var(--principal);
+}
+
+/* Estado en modo solo lectura (actividad cerrada) */
+#lista-asistencia li .etiqueta-estado {
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  min-width: 140px;
+  text-align: center;
+  color: white;
+}
+
+.dia.seleccionado {
+  outline: 3px solid #2e9e5b;
+}
+
+#detalle-dia {
+  margin-top: 16px;
+  background: white;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+#detalle-dia h3 {
+  margin: 0 0 10px;
+  text-transform: capitalize;
+}
+
+#detalle-dia h4 {
+  margin: 14px 0 6px;
+}
+
+#detalle-dia ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px;
+}
+
+#detalle-dia li {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 15px;
+}
+
+#detalle-dia .vacio-detalle {
+  color: #777;
+  font-size: 14px;
+}
+
+#detalle-dia button {
+  background: var(--principal);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+#detalle-dia button.secundario {
+  background: white;
+  color: var(--principal);
+  border: 2px solid var(--principal);
+  display: block;
+  margin-top: 14px;
+}
+
+#info-resumen {
+  color: #555;
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+
+#lista-resumen {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#lista-resumen li {
+  background: white;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+#lista-resumen .detalle-corista {
+  font-size: 12px;
+  color: #666;
+  margin-top: 3px;
+}
+
+#lista-resumen .porcentaje {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--principal);
+}
+
+#info-respaldo {
+  color: #555;
+  font-size: 14px;
+  margin: 0 0 16px;
+}
+
+.btn-respaldo {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 10px;
+  border: none;
+  border-radius: 8px;
+  background: var(--principal);
+  color: white;
+  font-size: 16px;
+}
+
+.btn-respaldo.secundario {
+  background: white;
+  color: var(--principal);
+  border: 2px solid var(--principal);
+}
+
+/* Con 4 botones en el menú, achicamos un poco el texto */
+#menu button {
+  font-size: 13px;
+  padding: 12px 4px;
+}
+
+.botones-corista {
+  display: flex;
+  gap: 6px;
+}
+
+#lista-coristas li button.btn-editar {
+  background: var(--principal);
+}
+
+.selector-vista {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.selector-vista button {
+  flex: 1;
+  padding: 10px;
+  border: 2px solid var(--principal);
+  border-radius: 8px;
+  background: white;
+  color: var(--principal);
+  font-size: 15px;
+}
+
+.selector-vista button.activo {
+  background: var(--principal);
+  color: white;
+}
+
+#input-usuario {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin: 4px 0 16px;
+}
+
+#ultimo-cambio,
+.ultimo-cambio-detalle {
+  color: #777;
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+
+#lista-resumen .nombre-resumen {
+  font-size: 16px;
+  font-weight: bold;
+  color: #222;
+}
+
+#lista-resumen .cultos-principal {
+  font-size: 14px;
+  color: #444;
+  margin-top: 4px;
+}
+
+#lista-resumen .cultos-principal strong {
+  color: var(--principal);
+  font-size: 16px;
+}
+
+#lista-resumen .fichas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+#lista-resumen .ficha {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  color: white;
+}
+
+#lista-resumen .ficha-abajo { background: #e69a1c; }
+#lista-resumen .ficha-permiso { background: #2f7de1; }
+#lista-resumen .ficha-ausente { background: #b0b0b0; }
+
+#lista-coristas li.titulo-ex {
+  background: transparent;
+  font-weight: bold;
+  color: #666;
+  padding: 12px 4px 4px;
+}
+
+.texto-baja {
+  font-size: 12px;
+  color: #777;
+  margin-top: 3px;
+}
+
+/* ===== Ventanas de aviso (modal) ===== */
+.modal-fondo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  background: rgba(34, 28, 70, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: modal-aparecer 0.15s ease;
+}
+
+.modal-caja {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  animation: modal-subir 0.18s ease;
+}
+
+.modal-titulo {
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: var(--principal);
+}
+
+.modal-texto {
+  margin: 0 0 16px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: #333;
+  white-space: pre-line;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.modal-input:focus {
+  outline: 2px solid var(--principal);
+  border-color: var(--principal);
+}
+
+.modal-botones {
+  display: flex;
+  gap: 8px;
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: var(--principal);
+  color: white;
+  font-size: 15px;
+}
+
+.modal-btn.secundario {
+  background: white;
+  color: var(--principal);
+  border: 2px solid var(--principal);
+}
+
+.modal-btn.peligro {
+  background: #d9534f;
+}
+
+@keyframes modal-aparecer {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-subir {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Mensajito que se va solo */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 80px;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  z-index: 90;
+  max-width: 90%;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.toast.visible {
+  opacity: 1;
+}
+
+/* ===== Detalles de la reunión ===== */
+#btn-volver-reunion {
+  background: none;
+  border: none;
+  color: var(--principal);
+  font-size: 16px;
+  padding: 8px 0;
+}
+
+#titulo-reunion {
+  text-transform: capitalize;
+  margin: 6px 0 4px;
+}
+
+#ultimo-cambio-reunion {
+  color: #777;
+  font-size: 13px;
+  margin: 0 0 4px;
+}
+
+#pantalla-reunion label {
+  display: block;
+  font-weight: bold;
+  font-size: 14px;
+  color: var(--principal);
+  margin: 16px 0 4px;
+}
+
+#pantalla-reunion input,
+#pantalla-reunion textarea {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: white;
+  font-family: Arial, sans-serif;
+}
+
+#pantalla-reunion textarea {
+  resize: vertical;
+}
+
+#btn-guardar-reunion {
+  margin-top: 20px;
+}
+
+.resumen-reunion {
+  margin: 2px 0;
+  font-size: 14px;
+  color: #444;
+}
+
+.resumen-reunion.texto-largo {
+  white-space: pre-wrap;
+  color: #666;
+}
+
+/* Que los botones de cada actividad no se salgan en pantallas angostas */
+.botones-act {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+#detalle-dia button {
+  margin-right: 6px;
+}
+
+/* Reunión en modo solo lectura */
+#pantalla-reunion input:disabled,
+#pantalla-reunion textarea:disabled {
+  background: #f7f7fb;
+  color: #222;
+  opacity: 1;
+  -webkit-text-fill-color: #222;
+}
+
+#aviso-reunion {
+  background: var(--principal-claro);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  margin: 8px 0 0;
+}
+
+/* ===== Registros más agradables (pegar al FINAL de estilos.css) ===== */
+
+/* Registro del día, debajo del calendario */
+#detalle-dia {
+  padding: 16px;
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+#detalle-dia h3 {
+  font-size: 18px;
+  color: var(--principal);
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--principal-claro);
+}
+
+.bloque {
+  background: #fafafd;
+  border: 1px solid #ececf3;
+  border-left: 5px solid #999;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.bloque.tipo-culto { border-left-color: #2e9e5b; }
+.bloque.tipo-reunion { border-left-color: #2f7de1; }
+.bloque.tipo-ensayo { border-left-color: #e69a1c; }
+.bloque.tipo-sinculto { border-left-color: #999; }
+
+.bloque-encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+#detalle-dia .bloque-encabezado h4 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.sello-cerrada {
+  font-size: 12px;
+  font-weight: bold;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: var(--principal-claro);
+  color: var(--principal);
+}
+
+.bloque .ultimo-cambio-detalle {
+  margin: 4px 0 10px;
+}
+
+/* Datos de la reunión */
+.ficha-reunion {
+  background: white;
+  border: 1px solid #ececf3;
+  border-radius: 8px;
+  padding: 4px 12px;
+  margin: 8px 0 10px;
+}
+
+.fila-dato {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f5;
+  font-size: 14px;
+}
+
+.dato-etiqueta {
+  color: #777;
+}
+
+.dato-valor {
+  font-weight: bold;
+  text-align: right;
+}
+
+.dato-texto {
+  padding: 8px 0 6px;
+  font-size: 14px;
+}
+
+.dato-texto .dato-etiqueta {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.dato-texto p {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.4;
+  color: #333;
+}
+
+/* Quiénes asistieron */
+.lista-asistentes {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 4px;
+  background: white;
+  border: 1px solid #ececf3;
+  border-radius: 8px;
+}
+
+#detalle-dia .lista-asistentes li {
+  align-items: center;
+  padding: 9px 12px;
+  border-bottom: 1px solid #f0f0f5;
+}
+
+#detalle-dia .lista-asistentes li:last-child {
+  border-bottom: none;
+}
+
+.nombre-asistente {
+  font-size: 15px;
+}
+
+.chip {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  color: white;
+  white-space: nowrap;
+}
+
+.acciones-bloque {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+#detalle-dia .acciones-bloque button {
+  margin: 0;
+}
+
+/* Pantalla de asistencia */
+#titulo-asistencia {
+  text-transform: capitalize;
+  color: var(--principal);
+}
+
+#resumen-asistencia {
+  background: var(--principal-claro);
+  color: #333;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+#resumen-asistencia:empty {
+  display: none;
+}
+
+#lista-asistencia li {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
+  padding: 10px 12px 10px 14px;
+}
+
+#lista-asistencia li > span:first-child {
+  font-size: 16px;
+}
+
+#lista-asistencia li button,
+#lista-asistencia li .etiqueta-estado {
+  border-radius: 20px;
+  min-width: 150px;
+}
+
+/* Ficha de la reunión */
+#titulo-reunion {
+  color: var(--principal);
+}
+
+#pantalla-reunion label {
+  border-left: 3px solid var(--principal);
+  padding-left: 8px;
+}
+
+#pantalla-reunion input,
+#pantalla-reunion textarea {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+#pantalla-reunion input:focus,
+#pantalla-reunion textarea:focus {
+  outline: 2px solid var(--principal);
+  border-color: var(--principal);
+}
+
+#resumen-coristas .dato-resumen {
+  flex: 1;
+  background: white;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#resumen-coristas .dato-resumen span {
+  font-size: 12px;
+  color: #666;
+}
+
+#resumen-coristas {
+  margin-bottom: 12px;
+}
+
+#resumen-coristas .tarjetas {
+  display: flex;
+  gap: 8px;
+}
+
+#resumen-coristas .dato-resumen {
+  flex: 1;
+  background: white;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#resumen-coristas .dato-resumen span {
+  font-size: 12px;
+  color: #666;
+}
+
+#resumen-coristas .dato-resumen strong {
+  font-size: 22px;
+  color: var(--principal);
+}
+
+.linea-sello {
+  margin-top: 4px;
+}
