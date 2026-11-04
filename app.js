@@ -16,10 +16,17 @@ function crearModal(config) {
       caja.appendChild(titulo);
     }
 
-    const texto = document.createElement("p");
-    texto.className = "modal-texto";
-    texto.textContent = config.mensaje;
-    caja.appendChild(texto);
+    if (config.mensaje) {
+      const texto = document.createElement("p");
+      texto.className = "modal-texto";
+      texto.textContent = config.mensaje;
+      caja.appendChild(texto);
+    }
+
+    // Campos propios (por ejemplo nombre y cumpleaños)
+    if (config.cuerpo) {
+      caja.appendChild(config.cuerpo);
+    }
 
     let input = null;
     if (config.conCampo) {
@@ -34,7 +41,7 @@ function crearModal(config) {
     botones.className = "modal-botones";
 
     // Lo que devuelve cada tipo de aviso al cancelar
-    const alCancelar = config.conCampo ? null : (config.textoNo ? false : undefined);
+    const alCancelar = (config.conCampo || config.leer) ? null : (config.textoNo ? false : undefined);
 
     function cerrar(resultado) {
       document.removeEventListener("keydown", teclas);
@@ -43,13 +50,17 @@ function crearModal(config) {
     }
 
     function aceptar() {
-      cerrar(config.conCampo ? input.value : true);
+      if (config.leer) {
+        cerrar(config.leer());
+      } else {
+        cerrar(config.conCampo ? input.value : true);
+      }
     }
 
     function teclas(evento) {
       if (evento.key === "Escape") {
         cerrar(alCancelar);
-      } else if (evento.key === "Enter" && config.conCampo) {
+      } else if (evento.key === "Enter" && (config.conCampo || config.leer)) {
         aceptar();
       }
     }
@@ -86,6 +97,8 @@ function crearModal(config) {
     if (input) {
       input.focus();
       input.select();
+    } else if (config.cuerpo && config.cuerpo.querySelector("input")) {
+      config.cuerpo.querySelector("input").focus();
     } else {
       botonSi.focus();
     }
@@ -218,91 +231,6 @@ function soloVerReunion(act) {
   return act.tipo === "reunion" && !esAdmin();
 }
 
-// ----- CORISTAS INACTIVOS (aparte de las bajas) -----
-// Un corista está inactivo si no subió a ningún culto en los últimos 14 días
-// (y tampoco tuvo permiso en ninguno).
-// Solo se miden los cultos ya guardados (cerrados). Si hay menos de 2 en ese
-// periodo, no se marca a nadie, porque no hay datos suficientes para juzgar.
-const DIAS_INACTIVIDAD = 14;
-const MIN_CULTOS_PARA_JUZGAR = 2;
-
-function calcularInactivos() {
-  const hoy = new Date();
-  const limite = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - DIAS_INACTIVIDAD);
-  const desde = crearFecha(limite.getFullYear(), limite.getMonth(), limite.getDate());
-  const hasta = crearFecha(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
-
-  const cultos = actividades.filter(function (a) {
-    return a.tipo === "culto" && a.cerrada && a.fecha >= desde && a.fecha <= hasta;
-  });
-
-  const inactivos = new Set();
-  if (cultos.length < MIN_CULTOS_PARA_JUZGAR) {
-    return inactivos;
-  }
-
-  coristas.forEach(function (corista) {
-    if (corista.fechaBaja) {
-      return; // los que ya no están en el coro no cuentan
-    }
-    if (corista.id > limite.getTime()) {
-      return; // agregado hace poco: todavía no hay historial que evaluar
-    }
-    // Si subió a algún culto, o tuvo permiso en alguno, no está inactivo
-    const activo = cultos.some(function (culto) {
-      const estado = estadoDe(culto, corista);
-      return estado === "subio" || estado === "permiso";
-    });
-    if (!activo) {
-      inactivos.add(corista.id);
-    }
-  });
-
-  return inactivos;
-}
-
-function dibujarResumenCoristas(cantidad, inactivos) {
-  let caja = document.getElementById("resumen-coristas");
-  if (!caja) {
-    caja = document.createElement("div");
-    caja.id = "resumen-coristas";
-    const lista = document.getElementById("lista-resumen");
-    lista.parentNode.insertBefore(caja, lista);
-  }
-  caja.innerHTML = "";
-
-  const tarjetas = document.createElement("div");
-  tarjetas.className = "tarjetas";
-
-  const datos = [
-    ["Cantidad de coristas", cantidad, ""],
-    ["Coristas inactivos", inactivos,
-      "Corista inactivo: no ha subido en " + Math.round(DIAS_INACTIVIDAD / 7) + " semanas"]
-  ];
-
-  datos.forEach(function (par) {
-    const dato = document.createElement("div");
-    dato.className = "dato-resumen";
-
-    const etiqueta = document.createElement("span");
-    etiqueta.textContent = par[0];
-    const valor = document.createElement("strong");
-    valor.textContent = par[1];
-    dato.appendChild(etiqueta);
-    dato.appendChild(valor);
-
-    if (par[2]) {
-      const nota = document.createElement("span");
-      nota.className = "nota-tarjeta";
-      nota.textContent = par[2];
-      dato.appendChild(nota);
-    }
-
-    tarjetas.appendChild(dato);
-  });
-  caja.appendChild(tarjetas);
-}
-
 // ----- CORISTAS -----
 function dibujarCoristas() {
   const lista = document.getElementById("lista-coristas");
@@ -317,8 +245,17 @@ function dibujarCoristas() {
   activos.forEach(function (corista) {
     const item = document.createElement("li");
 
-    const nombre = document.createElement("span");
-    nombre.textContent = corista.nombre;
+    // Nombre y, si lo tiene, su cumpleaños en letra pequeña
+    const nombre = document.createElement("div");
+    const textoNombre = document.createElement("div");
+    textoNombre.textContent = corista.nombre;
+    nombre.appendChild(textoNombre);
+    if (corista.cumple) {
+      const lineaCumple = document.createElement("div");
+      lineaCumple.className = "texto-baja";
+      lineaCumple.textContent = "Cumpleaños: " + textoCumple(corista.cumple);
+      nombre.appendChild(lineaCumple);
+    }
 
     const botones = document.createElement("div");
     botones.className = "botones-corista";
@@ -391,22 +328,147 @@ function dibujarCoristas() {
   }
 }
 
-async function editarCorista(id) {
+// ----- CUMPLEAÑOS: meses, formato y quiénes cumplen cada día -----
+const NOMBRES_MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio",
+  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+
+// Convierte "03-14" en "14 de marzo"
+function textoCumple(clave) {
+  const partes = clave.split("-").map(Number);
+  return partes[1] + " de " + NOMBRES_MESES[partes[0] - 1];
+}
+
+// Devuelve los coristas que cumplen años en una fecha "2026-10-14"
+function cumpleanerosDelDia(fecha) {
+  const partes = fecha.split("-").map(Number);
+  const clave = String(partes[1]).padStart(2, "0") + "-" + String(partes[2]).padStart(2, "0");
+  const bisiesto = (partes[0] % 4 === 0 && partes[0] % 100 !== 0) || partes[0] % 400 === 0;
+
+  return coristasDeLaFecha(fecha).filter(function (c) {
+    if (!c.cumple) {
+      return false;
+    }
+    if (c.cumple === clave) {
+      return true;
+    }
+    // Quien cumple el 29 de febrero lo celebra el 28 en los años que no son bisiestos
+    return c.cumple === "02-29" && !bisiesto && clave === "02-28";
+  });
+}
+
+// ----- EDITAR CORISTA: ventana con nombre y cumpleaños -----
+async function editarCorista(id, valores) {
   const corista = coristas.find(function (c) {
     return c.id === id;
   });
-  const nuevo = await preguntar("Escribe el nombre nuevo.", corista.nombre, { titulo: "Editar corista", textoSi: "Guardar" });
-
-  if (nuevo === null || nuevo.trim() === "") {
-    return; // canceló o lo dejó vacío
+  if (!corista) {
+    return;
   }
 
-  corista.nombre = nuevo.trim();
+  // "valores" se usa para volver a abrir la ventana con lo que ya se había escrito
+  const actual = valores || {
+    nombre: corista.nombre,
+    mes: corista.cumple ? Number(corista.cumple.split("-")[0]) : "",
+    dia: corista.cumple ? Number(corista.cumple.split("-")[1]) : ""
+  };
+
+  // Campos de la ventana
+  const cuerpo = document.createElement("div");
+
+  const etiquetaNombre = document.createElement("label");
+  etiquetaNombre.className = "modal-etiqueta";
+  etiquetaNombre.textContent = "Nombre";
+  const inputNombre = document.createElement("input");
+  inputNombre.type = "text";
+  inputNombre.className = "modal-input";
+  inputNombre.value = actual.nombre;
+
+  const etiquetaCumple = document.createElement("label");
+  etiquetaCumple.className = "modal-etiqueta";
+  etiquetaCumple.textContent = "Cumpleaños (opcional)";
+
+  const fila = document.createElement("div");
+  fila.className = "fila-cumple";
+
+  const selectDia = document.createElement("select");
+  selectDia.className = "modal-select";
+  selectDia.innerHTML = '<option value="">Día</option>';
+  for (let d = 1; d <= 31; d++) {
+    selectDia.innerHTML += '<option value="' + d + '">' + d + "</option>";
+  }
+
+  const selectMes = document.createElement("select");
+  selectMes.className = "modal-select";
+  selectMes.innerHTML = '<option value="">Mes</option>';
+  NOMBRES_MESES.forEach(function (nombreMes, i) {
+    selectMes.innerHTML += '<option value="' + (i + 1) + '">' + nombreMes + "</option>";
+  });
+
+  selectDia.value = actual.dia;
+  selectMes.value = actual.mes;
+
+  fila.appendChild(selectDia);
+  fila.appendChild(selectMes);
+  cuerpo.appendChild(etiquetaNombre);
+  cuerpo.appendChild(inputNombre);
+  cuerpo.appendChild(etiquetaCumple);
+  cuerpo.appendChild(fila);
+
+  const resultado = await crearModal({
+    titulo: "Editar corista",
+    textoSi: "Guardar",
+    textoNo: "Cancelar",
+    cuerpo: cuerpo,
+    leer: function () {
+      return {
+        nombre: inputNombre.value.trim(),
+        dia: selectDia.value,
+        mes: selectMes.value
+      };
+    }
+  });
+
+  if (resultado === null) {
+    return; // canceló
+  }
+
+  // Revisiones antes de guardar
+  if (resultado.nombre === "") {
+    await avisar("El nombre no puede quedar vacío.", "Falta el nombre");
+    return editarCorista(id, resultado);
+  }
+
+  const tieneDia = resultado.dia !== "";
+  const tieneMes = resultado.mes !== "";
+
+  if (tieneDia !== tieneMes) {
+    await avisar("Para guardar el cumpleaños elige el día y el mes. Si no quieres registrarlo, deja los dos vacíos.", "Cumpleaños incompleto");
+    return editarCorista(id, resultado);
+  }
+
+  if (tieneDia) {
+    // Usamos 2024 (año bisiesto) para saber cuántos días tiene cada mes, con febrero en 29
+    const diasDelMes = new Date(2024, Number(resultado.mes), 0).getDate();
+    if (Number(resultado.dia) > diasDelMes) {
+      await avisar("Ese mes no tiene día " + resultado.dia + ". Revisa la fecha.", "Fecha no válida");
+      return editarCorista(id, resultado);
+    }
+  }
+
+  // Guardar
+  corista.nombre = resultado.nombre;
+  if (tieneDia) {
+    corista.cumple = String(resultado.mes).padStart(2, "0") + "-" + String(resultado.dia).padStart(2, "0");
+  } else {
+    delete corista.cumple;
+  }
+
   coristas.sort(function (a, b) {
     return a.nombre.localeCompare(b.nombre);
   });
   guardarDatos("coristas", coristas);
   dibujarCoristas();
+  dibujarCalendario();
 }
 
 function agregarCorista() {
@@ -421,16 +483,13 @@ function agregarCorista() {
     return; // si está vacío, no hace nada
   }
 
-  const hoy = new Date();
-    coristas.push({
-      id: Date.now(),
-      nombre: nombre,
-      creado: crearFecha(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())
+  coristas.push({ id: Date.now(), nombre: nombre });
+  coristas.sort(function (a, b) {
+    return a.nombre.localeCompare(b.nombre);
   });
 
   guardarDatos("coristas", coristas);
   input.value = "";
-  input.focus();
   dibujarCoristas();
 }
 
@@ -504,12 +563,6 @@ async function eliminarCorista(id) {
 }
 
 document.getElementById("btn-agregar").addEventListener("click", agregarCorista);
-document.getElementById("input-nombre").addEventListener("keydown", function (evento) {
-  if (evento.key === "Enter") {
-    evento.preventDefault();
-    agregarCorista();
-  }
-});
 
 // ----- MENÚ ENTRE PANTALLAS -----
 function mostrarPantalla(nombre) {
@@ -533,7 +586,6 @@ document.getElementById("nav-calendario").addEventListener("click", function () 
   mostrarPantalla("calendario");
 });
 document.getElementById("nav-coristas").addEventListener("click", function () {
-  dibujarCoristas();
   mostrarPantalla("coristas");
 });
 document.getElementById("nav-resumen").addEventListener("click", function () {
@@ -611,6 +663,13 @@ function dibujarCalendario() {
         puntos.appendChild(punto);
       }
     });
+
+    // Punto rosado si alguien cumple años ese día
+    if (cumpleanerosDelDia(fecha).length > 0) {
+      const puntoCumple = document.createElement("span");
+      puntoCumple.className = "punto cumple";
+      puntos.appendChild(puntoCumple);
+    }
     celda.appendChild(puntos);
 
     // Al tocar el día, se abre su pantalla
@@ -1197,6 +1256,19 @@ function dibujarDetalle() {
   });
   caja.appendChild(titulo);
 
+  // Cumpleaños del día
+  cumpleanerosDelDia(fechaSeleccionada).forEach(function (c) {
+    const bloqueCumple = document.createElement("section");
+    bloqueCumple.className = "bloque tipo-cumple";
+    const encabezadoCumple = document.createElement("div");
+    encabezadoCumple.className = "bloque-encabezado";
+    const tituloCumple = document.createElement("h4");
+    tituloCumple.textContent = "Cumpleaños: " + c.nombre;
+    encabezadoCumple.appendChild(tituloCumple);
+    bloqueCumple.appendChild(encabezadoCumple);
+    caja.appendChild(bloqueCumple);
+  });
+
   const delDia = actividades.filter(function (a) {
     return a.fecha === fechaSeleccionada;
   });
@@ -1354,7 +1426,7 @@ let mesResumen = new Date();
 mesResumen.setDate(1);
 
 
-function crearFilaResumen(nombre, detalle, porcentaje, destacada, inactivo) {
+function crearFilaResumen(nombre, detalle, porcentaje, destacada) {
   const item = document.createElement("li");
   if (destacada) {
     item.style.border = "2px solid #4a3f8f";
@@ -1371,16 +1443,7 @@ function crearFilaResumen(nombre, detalle, porcentaje, destacada, inactivo) {
   } else {
     sub.appendChild(detalle);
   }
-    izquierda.appendChild(titulo);
-    if (inactivo) {
-      const linea = document.createElement("div");
-      linea.className = "linea-sello";
-      const sello = document.createElement("span");
-      sello.className = "sello-cerrada";
-      sello.textContent = "Inactivo";
-      linea.appendChild(sello);
-      izquierda.appendChild(linea);
-  }
+  izquierda.appendChild(titulo);
   izquierda.appendChild(sub);
 
   const derecha = document.createElement("div");
@@ -1486,11 +1549,6 @@ function dibujarResumenMensual() {
 
   const lista = document.getElementById("lista-resumen");
   lista.innerHTML = "";
-  const inactivos = calcularInactivos();
-  dibujarResumenCoristas(
-    coristas.filter(function (c) { return !c.fechaBaja; }).length,
-    inactivos.size
-  );
 
   if (coristas.length === 0) {
     lista.innerHTML = "<li>Aún no hay coristas.</li>";
@@ -1524,7 +1582,7 @@ function dibujarResumenMensual() {
       const nota = corista.fechaBaja ? textoBaja(corista) : "";
       const detalle = crearDetalleCorista(subio, totalCorista, nota);
 
-      lista.appendChild(crearFilaResumen(corista.nombre, detalle, porcentaje, false, inactivos.has(corista.id)));
+      lista.appendChild(crearFilaResumen(corista.nombre, detalle, porcentaje, false));
     });
   } else {
     // ----- Vista general -----
@@ -1701,132 +1759,3 @@ dibujarCoristas();
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js");
 }
-
-// ----- BOTÓN "ATRÁS" DEL CELULAR -----
-// La app lleva su propia lista de pantallas visitadas. Así, "atrás" vuelve a la
-// pantalla anterior y, estando en el calendario, sale de la app.
-const PANTALLAS_MENU = ["coristas", "resumen", "respaldo"];
-const SESION = String(Date.now());
-const mostrarPantallaBase = mostrarPantalla;
-let pila = ["calendario"];
-let restaurandoReunion = false;
-
-function guardarEstado(reemplazar) {
-  const estado = { pila: pila.slice(), sesion: SESION };
-  if (reemplazar) {
-    history.replaceState(estado, "");
-  } else {
-    history.pushState(estado, "");
-  }
-}
-
-// Reemplaza a la función original: además de mostrar la pantalla, anota el paso
-mostrarPantalla = function (nombre, desdeHistorial) {
-  mostrarPantallaBase(nombre);
-  if (desdeHistorial) {
-    return;
-  }
-
-  const actual = pila[pila.length - 1];
-  if (nombre === actual) {
-    return;
-  }
-
-  // Si esa pantalla ya está en la lista, retrocedemos hasta ella
-  const posicion = pila.lastIndexOf(nombre);
-  if (posicion !== -1) {
-    const pasos = pila.length - 1 - posicion;
-    pila.length = posicion + 1;
-    history.go(-pasos);
-    return;
-  }
-
-  // Cambiar entre pestañas del menú no suma pasos; salir de una ficha al día tampoco
-  const entreMenus = PANTALLAS_MENU.includes(nombre) && PANTALLAS_MENU.includes(actual);
-  const salidaDeFicha = nombre === "dia" && (actual === "asistencia" || actual === "reunion");
-  if (entreMenus || salidaDeFicha) {
-    pila[pila.length - 1] = nombre;
-    guardarEstado(true);
-    return;
-  }
-
-  pila.push(nombre);
-  guardarEstado(false);
-};
-
-function mostrarDesdeHistorial(nombre) {
-  let valida = true;
-  if (nombre === "asistencia") {
-    valida = !!buscarActividad();
-  } else if (nombre === "reunion") {
-    valida = reunionAbierta !== null && actividades.some(function (a) {
-      return a.id === reunionAbierta;
-    });
-  }
-
-  if (!valida) {
-    pila = ["calendario"];
-    guardarEstado(true);
-    nombre = "calendario";
-  }
-
-  if (nombre === "calendario") {
-    dibujarCalendario();
-  } else if (nombre === "coristas") {
-    dibujarCoristas();
-  } else if (nombre === "dia") {
-    if (fechaSeleccionada) {
-      dibujarDia();
-    } else {
-      pila = ["calendario"];
-      guardarEstado(true);
-      nombre = "calendario";
-      dibujarCalendario();
-    }
-  } else if (nombre === "asistencia") {
-    dibujarAsistencia();
-  } else if (nombre === "resumen") {
-    dibujarResumenMensual();
-  } else if (nombre === "respaldo") {
-    dibujarInfoRespaldo();
-  }
-  // (la ficha de reunión no se redibuja para no borrar lo que se escribió)
-
-  mostrarPantallaBase(nombre);
-}
-
-window.addEventListener("popstate", function (evento) {
-  const estado = evento.state;
-
-  // Pasos guardados antes de recargar la página: se saltan
-  if (!estado || estado.sesion !== SESION) {
-    history.back();
-    return;
-  }
-
-  const antes = pila[pila.length - 1];
-  const destino = estado.pila[estado.pila.length - 1];
-
-  // Segunda parte: volvimos a la ficha de reunión, ahora sí preguntamos
-  if (restaurandoReunion) {
-    restaurandoReunion = false;
-    pila = estado.pila.slice();
-    mostrarPantallaBase("reunion");
-    volverDeReunion();
-    return;
-  }
-
-  // Salir de la ficha de reunión con cambios sin guardar: primero se deshace
-  // el paso atrás y se pregunta si de verdad quiere salir
-  if (antes === "reunion" && destino !== "reunion" && reunionModificada) {
-    restaurandoReunion = true;
-    history.go(1);
-    return;
-  }
-
-  pila = estado.pila.slice();
-  mostrarDesdeHistorial(destino);
-});
-
-// Punto de partida: el calendario
-guardarEstado(true);

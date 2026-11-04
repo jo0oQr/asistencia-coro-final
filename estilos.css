@@ -1004,3 +1004,33 @@ main {
 .linea-sello {
   margin-top: 4px;
 }
+
+/* ===== Cumpleaños (pegar al FINAL de estilos.css) ===== */
+
+/* Punto y franja de color de los cumpleaños */
+.punto.cumple { background: #d6639a; }
+.bloque.tipo-cumple { border-left-color: #d6639a; }
+
+/* Campos dentro de la ventana de editar */
+.modal-etiqueta {
+  display: block;
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--principal);
+  margin: 0 0 4px;
+}
+
+.fila-cumple {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.modal-select {
+  flex: 1;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: white;
+}
