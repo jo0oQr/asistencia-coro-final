@@ -1034,3 +1034,402 @@ main {
   border-radius: 8px;
   background: white;
 }
+
+/* ===== Tesorería ===== */
+#pantalla-tesoreria h3 {
+  margin: 18px 0 8px;
+  font-size: 16px;
+}
+
+.tarjeta-saldo,
+.tarjeta-cuotas {
+  background: white;
+  border-radius: 12px;
+  padding: 14px;
+  border: 1px solid #ececf3;
+}
+
+.saldo-etiqueta {
+  font-size: 13px;
+  color: #666;
+}
+
+.saldo-valor {
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--principal);
+}
+
+.saldo-fila {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.saldo-dato {
+  flex: 1;
+  background: #f4f4f8;
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.saldo-dato:first-child {
+  background: var(--principal-claro);
+}
+
+.saldo-dato span {
+  font-size: 12px;
+  color: #666;
+}
+
+.saldo-dato strong {
+  font-size: 16px;
+  color: var(--principal);
+}
+
+.tes-botones {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.tes-botones button {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.btn-ingreso {
+  background: var(--suave);
+  color: white;
+  border: none;
+}
+
+.btn-salida {
+  background: white;
+  color: var(--principal);
+  border: 2px solid var(--principal);
+}
+
+#lista-movimientos {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#lista-movimientos li {
+  background: white;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.mov-obs {
+  font-size: 15px;
+}
+
+.mov-fecha {
+  font-size: 12px;
+  color: #777;
+  margin-top: 3px;
+}
+
+.mov-derecha {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mov-monto {
+  font-size: 15px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.mov-monto.ingreso {
+  color: var(--principal);
+}
+
+#lista-movimientos li button {
+  background: var(--secundario);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+.tarjeta-cuotas label {
+  display: block;
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--principal);
+  margin-bottom: 4px;
+}
+
+#tes-corista {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: white;
+  margin-bottom: 12px;
+}
+
+.tes-meses {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.tes-meses button {
+  min-height: 44px;
+  padding: 8px 4px;
+  font-size: 13px;
+  border-radius: 8px;
+  border: 2px solid var(--principal);
+  background: white;
+  color: var(--principal);
+}
+
+.tes-meses button.pagado {
+  background: var(--principal);
+  color: white;
+}
+
+.cuotas-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+  font-size: 13px;
+  color: #666;
+}
+
+.cuotas-total strong {
+  font-size: 22px;
+  color: var(--principal);
+}
+
+.cuotas-detalle {
+  font-size: 12px;
+  color: #777;
+  margin-top: 2px;
+}
+
+/* ===== Tesorería: planilla de cuotas ===== */
+.cuota-valor {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 1px solid #ececf3;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+
+.cuota-valor-etiqueta {
+  display: block;
+  font-size: 12px;
+  color: #666;
+}
+
+.cuota-valor strong {
+  font-size: 20px;
+  color: var(--principal);
+}
+
+.cuota-valor button {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.planilla-envoltorio {
+  background: white;
+  border: 1px solid #ececf3;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+#planilla-cuotas {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+#planilla-cuotas th,
+#planilla-cuotas td {
+  padding: 9px 1px;
+  text-align: center;
+  border-bottom: 1px solid #f0f0f5;
+}
+
+#planilla-cuotas th {
+  color: #666;
+  font-weight: bold;
+}
+
+#planilla-cuotas .col-nombre {
+  width: 30%;
+  text-align: left;
+  padding-left: 10px;
+  padding-right: 4px;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#planilla-cuotas th.col-nombre {
+  font-size: 12px;
+}
+
+#planilla-cuotas .col-resumen {
+  width: 15%;
+  font-weight: bold;
+  color: var(--principal);
+  padding-right: 8px;
+}
+
+#planilla-cuotas tr.fila-corista {
+  cursor: pointer;
+}
+
+#planilla-cuotas tr.abierta {
+  background: var(--principal-claro);
+}
+
+#planilla-cuotas tr.abierta .col-nombre {
+  color: var(--principal);
+  font-weight: bold;
+}
+
+.cuadro-mes {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 2px solid var(--principal);
+  vertical-align: middle;
+}
+
+.cuadro-mes.pagado {
+  background: var(--principal);
+}
+
+#planilla-cuotas tr.fila-panel td {
+  background: var(--principal-claro);
+  padding: 12px;
+  text-align: left;
+}
+
+.panel-cuotas .tes-meses button {
+  background: white;
+}
+
+.panel-cuotas .tes-meses button.pagado {
+  background: var(--principal);
+}
+
+.panel-total {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #333;
+}
+
+.panel-total strong {
+  color: var(--principal);
+}
+
+/* ===== Guardar cuotas y coristas que ya no están ===== */
+.btn-guardar-cuotas {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: var(--principal);
+  color: white;
+  font-size: 15px;
+}
+
+.panel-cambio {
+  font-size: 12px;
+  color: #777;
+  margin-top: 8px;
+}
+
+#tes-ex-coristas h3 {
+  margin: 18px 0 8px;
+  font-size: 16px;
+}
+
+.ex-corista {
+  background: white;
+  border: 1px solid #ececf3;
+  border-left: 5px solid #999;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.ex-corista-nombre {
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.ex-corista-texto {
+  font-size: 14px;
+  color: #444;
+  margin-top: 3px;
+}
+
+.ex-corista-cambio {
+  font-size: 12px;
+  color: #777;
+  margin-top: 3px;
+}
+
+/* ===== Meses que todavía no corresponden (antes de ingresar al coro) ===== */
+.cuadro-mes.no-aplica {
+  border-color: #ccc;
+  background: #eee;
+}
+
+.panel-cuotas .tes-meses button.no-aplica {
+  border-color: #ddd;
+  background: #f4f4f8;
+  color: #aaa;
+}
+
+/* Que los botones de ingreso y salida se oculten de verdad para quienes no administran */
+.tes-botones.oculto {
+  display: none;
+}
+
+/* ===== Casilla "Ingreso por cuotas" ===== */
+.saldo-fila {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.saldo-dato.cuotas {
+  grid-column: 1 / -1;
+  background: var(--principal-claro);
+}

@@ -172,6 +172,11 @@ let coristas = leerDatos("coristas", []);
 // Lista de actividades (cada una con fecha, tipo y asistencia)
 let actividades = leerDatos("actividades", []);
 
+// Tesorería: movimientos de caja y cuotas pagadas
+let movimientos = leerDatos("movimientos", []);
+let cuotas = leerDatos("cuotas", []);
+let valoresCuota = leerDatos("valoresCuota", []);
+
 // Día que se está viendo en la pantalla del día, ej: "2026-10-10"
 let fechaSeleccionada = null;
 
@@ -369,7 +374,8 @@ async function editarCorista(id, valores) {
   const actual = valores || {
     nombre: corista.nombre,
     mes: corista.cumple ? Number(corista.cumple.split("-")[0]) : "",
-    dia: corista.cumple ? Number(corista.cumple.split("-")[1]) : ""
+    dia: corista.cumple ? Number(corista.cumple.split("-")[1]) : "",
+    ingreso: corista.fechaIngreso || ""
   };
 
   // Campos de la ventana
@@ -407,12 +413,22 @@ async function editarCorista(id, valores) {
   selectDia.value = actual.dia;
   selectMes.value = actual.mes;
 
+  const etiquetaIngreso = document.createElement("label");
+  etiquetaIngreso.className = "modal-etiqueta";
+  etiquetaIngreso.textContent = "Fecha de ingreso al coro (desde ese mes se cuenta su cuota)";
+  const inputIngreso = document.createElement("input");
+  inputIngreso.type = "date";
+  inputIngreso.className = "modal-input";
+  inputIngreso.value = actual.ingreso;
+
   fila.appendChild(selectDia);
   fila.appendChild(selectMes);
   cuerpo.appendChild(etiquetaNombre);
   cuerpo.appendChild(inputNombre);
   cuerpo.appendChild(etiquetaCumple);
   cuerpo.appendChild(fila);
+  cuerpo.appendChild(etiquetaIngreso);
+  cuerpo.appendChild(inputIngreso);
 
   const resultado = await crearModal({
     titulo: "Editar corista",
@@ -423,7 +439,8 @@ async function editarCorista(id, valores) {
       return {
         nombre: inputNombre.value.trim(),
         dia: selectDia.value,
-        mes: selectMes.value
+        mes: selectMes.value,
+        ingreso: inputIngreso.value
       };
     }
   });
@@ -463,6 +480,13 @@ async function editarCorista(id, valores) {
     delete corista.cumple;
   }
 
+  // Sin fecha de ingreso, se le cuenta el año completo
+  if (resultado.ingreso !== "") {
+    corista.fechaIngreso = resultado.ingreso;
+  } else {
+    delete corista.fechaIngreso;
+  }
+
   coristas.sort(function (a, b) {
     return a.nombre.localeCompare(b.nombre);
   });
@@ -483,7 +507,13 @@ function agregarCorista() {
     return; // si está vacío, no hace nada
   }
 
-  coristas.push({ id: Date.now(), nombre: nombre });
+  // La fecha de ingreso es hoy. Si subió antes, se cambia con el botón Editar.
+  const hoy = new Date();
+  coristas.push({
+    id: Date.now(),
+    nombre: nombre,
+    fechaIngreso: crearFecha(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())
+  });
   coristas.sort(function (a, b) {
     return a.nombre.localeCompare(b.nombre);
   });
@@ -507,6 +537,7 @@ async function quitarCorista(id) {
   });
   const hoy = new Date();
   corista.fechaBaja = crearFecha(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+  anotarCambio(corista);
   guardarDatos("coristas", coristas);
   dibujarCoristas();
 }
@@ -573,12 +604,15 @@ function mostrarPantalla(nombre) {
   document.getElementById("pantalla-resumen").classList.toggle("oculto", nombre !== "resumen");
   document.getElementById("pantalla-respaldo").classList.toggle("oculto", nombre !== "respaldo");
   document.getElementById("pantalla-reunion").classList.toggle("oculto", nombre !== "reunion");
+  document.getElementById("pantalla-tesoreria").classList.toggle("oculto", nombre !== "tesoreria");
 
   // El día y la asistencia cuentan como parte del calendario en el menú
-  const enCalendario = nombre !== "coristas" && nombre !== "resumen" && nombre !== "respaldo";
+  const enCalendario = nombre !== "coristas" && nombre !== "resumen" &&
+    nombre !== "respaldo" && nombre !== "tesoreria";
   document.getElementById("nav-calendario").classList.toggle("activo", enCalendario);
   document.getElementById("nav-coristas").classList.toggle("activo", nombre === "coristas");
   document.getElementById("nav-resumen").classList.toggle("activo", nombre === "resumen");
+  document.getElementById("nav-tesoreria").classList.toggle("activo", nombre === "tesoreria");
   document.getElementById("nav-respaldo").classList.toggle("activo", nombre === "respaldo");
 }
 
@@ -1749,6 +1783,653 @@ function textoUltimoCambio(act) {
 
 document.getElementById("input-usuario").addEventListener("change", function (evento) {
   guardarDatos("usuario", evento.target.value.trim());
+});
+
+// ----- TESORERÍA -----
+const MESES_CORTOS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun",
+  "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+const INICIALES_MESES = ["E", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
+
+// Valor de la cuota mensual de cada año, mientras la administradora no lo cambie.
+// Los años que no aparecen aquí parten en CUOTA_GENERAL.
+const CUOTA_POR_DEFECTO = { 2025: 500 };
+const CUOTA_GENERAL = 1000;
+
+let anioTesoreria = new Date().getFullYear();
+let coristaAbierto = null; // id del corista desplegado en la planilla
+
+function valorCuota(anio) {
+  const guardado = valoresCuota.find(function (v) {
+    return v.anio === anio;
+  });
+  if (guardado) {
+    return guardado.valor;
+  }
+  return CUOTA_POR_DEFECTO[anio] || CUOTA_GENERAL;
+}
+
+function formatoSaldo(numero) {
+  return (numero < 0 ? "-" : "") + formatoPesos(Math.abs(numero));
+}
+
+// Busca (o crea) el registro de cuotas de un corista en un año
+function registroCuota(coristaId, anio, crear) {
+  const id = "cuota-" + coristaId + "-" + anio;
+  let registro = cuotas.find(function (c) {
+    return c.id === id;
+  });
+  if (!registro && crear) {
+    registro = {
+      id: id,
+      coristaId: coristaId,
+      anio: anio,
+      pagados: [false, false, false, false, false, false,
+                false, false, false, false, false, false]
+    };
+    cuotas.push(registro);
+  }
+  return registro;
+}
+
+// Coristas que estuvieron en el coro durante ese año
+function coristasDelAnio(anio) {
+  return coristas.filter(function (c) {
+    return !c.fechaBaja || c.fechaBaja >= anio + "-01-01";
+  });
+}
+
+// Suma de todas las cuotas guardadas en la planilla (de todos los años)
+function totalCuotasRecaudadas() {
+  let total = 0;
+  cuotas.forEach(function (registro) {
+    const corista = coristas.find(function (c) {
+      return c.id === registro.coristaId;
+    });
+    if (!corista) {
+      return; // corista eliminado definitivamente
+    }
+    const inicio = mesInicioCuota(corista, registro.anio);
+    total += contarPagados(registro.pagados || [], inicio) * valorCuota(registro.anio);
+  });
+  return total;
+}
+
+function dibujarTesoreria() {
+  const admin = esAdmin();
+  document.getElementById("tes-botones").classList.toggle("oculto", !admin);
+  document.getElementById("btn-cambiar-cuota").classList.toggle("oculto", !admin);
+
+  // ----- Caja -----
+  let ingresos = 0;
+  let salidas = 0;
+  movimientos.forEach(function (m) {
+    if (m.tipo === "ingreso") {
+      ingresos += m.monto;
+    } else {
+      salidas += m.monto;
+    }
+  });
+  document.getElementById("tes-saldo").textContent = formatoSaldo(ingresos - salidas);
+  document.getElementById("tes-ingresos").textContent = formatoPesos(ingresos);
+  document.getElementById("tes-salidas").textContent = formatoPesos(salidas);
+
+  
+  // Ingreso por cuotas: se calcula solo con las cuotas guardadas en la planilla
+  let valorCuotas = document.getElementById("tes-cuotas-ingreso");
+  if (!valorCuotas) {
+    const dato = document.createElement("div");
+    dato.className = "saldo-dato cuotas";
+    const etiqueta = document.createElement("span");
+    etiqueta.textContent = "Ingreso por cuotas";
+    valorCuotas = document.createElement("strong");
+    valorCuotas.id = "tes-cuotas-ingreso";
+    dato.appendChild(etiqueta);
+    dato.appendChild(valorCuotas);
+    document.querySelector(".saldo-fila").appendChild(dato);
+  }
+  valorCuotas.textContent = formatoPesos(totalCuotasRecaudadas());
+
+  // ----- Lista de movimientos -----
+  const lista = document.getElementById("lista-movimientos");
+  lista.innerHTML = "";
+
+  if (movimientos.length === 0) {
+    lista.innerHTML = "<li>Todavía no hay movimientos.</li>";
+  }
+
+  const ordenados = movimientos.slice().sort(function (a, b) {
+    return b.fecha.localeCompare(a.fecha) || b.id - a.id;
+  });
+
+  ordenados.forEach(function (mov) {
+    const item = document.createElement("li");
+
+    const info = document.createElement("div");
+    const obs = document.createElement("div");
+    obs.className = "mov-obs";
+    obs.textContent = mov.observacion || (mov.tipo === "ingreso" ? "Ingreso" : "Salida");
+    const fecha = document.createElement("div");
+    fecha.className = "mov-fecha";
+    fecha.textContent = leerFecha(mov.fecha).toLocaleDateString("es-CL", {
+      day: "numeric", month: "long", year: "numeric"
+    }) + " · " + (mov.tipo === "ingreso" ? "Ingreso" : "Salida");
+    info.appendChild(obs);
+    info.appendChild(fecha);
+
+    const derecha = document.createElement("div");
+    derecha.className = "mov-derecha";
+    const monto = document.createElement("span");
+    monto.className = "mov-monto " + mov.tipo;
+    monto.textContent = (mov.tipo === "ingreso" ? "+" : "-") + formatoPesos(mov.monto);
+    derecha.appendChild(monto);
+
+    if (admin) {
+      const quitar = document.createElement("button");
+      quitar.textContent = "Quitar";
+      quitar.addEventListener("click", function () {
+        quitarMovimiento(mov.id);
+      });
+      derecha.appendChild(quitar);
+    }
+
+    item.appendChild(info);
+    item.appendChild(derecha);
+    lista.appendChild(item);
+  });
+
+  // ----- Cuotas -----
+  document.getElementById("titulo-tes-anio").textContent = anioTesoreria;
+  document.getElementById("tes-valor-cuota").textContent = formatoPesos(valorCuota(anioTesoreria));
+  dibujarPlanilla();
+}
+
+  // Mientras no se aprieta "Guardar cuotas", los meses marcados viven en este borrador
+let borradorCuotas = null;
+let cuotasSinGuardar = false;
+
+// Si hay meses marcados sin guardar, pregunta antes de descartarlos.
+// Devuelve true si se puede seguir.
+async function soltarBorrador() {
+  if (!cuotasSinGuardar) {
+    return true;
+  }
+  const seguro = await confirmar("Los meses que marcaste y no guardaste se van a perder.", {
+    titulo: "¿Salir sin guardar?", textoSi: "Salir sin guardar", peligro: true
+  });
+  if (seguro) {
+    cuotasSinGuardar = false;
+    borradorCuotas = null;
+  }
+  return seguro;
+}
+
+// Coristas dados de baja: se muestran abajo de la planilla
+function dibujarExCoristas() {
+  // Si el HTML publicado no tiene este espacio, se crea aquí
+  let caja = document.getElementById("tes-ex-coristas");
+  if (!caja) {
+    caja = document.createElement("div");
+    caja.id = "tes-ex-coristas";
+    document.getElementById("pantalla-tesoreria").appendChild(caja);
+  }
+  caja.innerHTML = "";
+
+  const ex = coristas.filter(function (c) {
+    return c.fechaBaja;
+  });
+  if (ex.length === 0) {
+    return;
+  }
+
+  const titulo = document.createElement("h3");
+  titulo.textContent = "Ya no están en el coro";
+  caja.appendChild(titulo);
+
+  ex.forEach(function (corista) {
+    const tarjeta = document.createElement("div");
+    tarjeta.className = "ex-corista";
+
+    const nombre = document.createElement("div");
+    nombre.className = "ex-corista-nombre";
+    nombre.textContent = corista.nombre;
+    tarjeta.appendChild(nombre);
+
+    const baja = document.createElement("div");
+    baja.className = "ex-corista-texto";
+    baja.textContent = "No forma parte del coro desde el " +
+      leerFecha(corista.fechaBaja).toLocaleDateString("es-CL", {
+        day: "numeric", month: "long", year: "numeric"
+      }) + ".";
+    tarjeta.appendChild(baja);
+
+    const cambio = textoUltimoCambio(corista);
+    if (cambio) {
+      const lineaCambio = document.createElement("div");
+      lineaCambio.className = "ex-corista-cambio";
+      lineaCambio.textContent = cambio;
+      tarjeta.appendChild(lineaCambio);
+    }
+
+    caja.appendChild(tarjeta);
+  });
+}
+
+// Primer mes (0 = enero ... 11 = diciembre) desde el que corre la cuota de un
+// corista en ese año. Sin fecha de ingreso cuentan todos los meses.
+function mesInicioCuota(corista, anio) {
+  if (!corista.fechaIngreso) {
+    return 0;
+  }
+  const ingreso = leerFecha(corista.fechaIngreso);
+  if (ingreso.getFullYear() < anio) {
+    return 0;
+  }
+  if (ingreso.getFullYear() > anio) {
+    return 12; // todavía no había ingresado ese año
+  }
+  return ingreso.getMonth();
+}
+
+// Cuenta los meses pagados desde el mes de inicio
+function contarPagados(marcas, inicio) {
+  let n = 0;
+  for (let i = inicio; i < 12; i++) {
+    if (marcas[i] === true) {
+      n++;
+    }
+  }
+  return n;
+}
+
+function dibujarPlanilla() {
+  dibujarExCoristas();
+
+  const tabla = document.getElementById("planilla-cuotas");
+  tabla.innerHTML = "";
+
+  const anio = anioTesoreria;
+  const valor = valorCuota(anio);
+
+  // Solo coristas activos que ya habían ingresado en ese año
+  const lista = coristas.filter(function (c) {
+    return !c.fechaBaja && mesInicioCuota(c, anio) < 12;
+  });
+
+  // Si el corista que estaba abierto ya no está, se cierra su panel
+  const sigueAbierto = lista.some(function (c) {
+    return c.id === coristaAbierto;
+  });
+  if (!sigueAbierto) {
+    coristaAbierto = null;
+    borradorCuotas = null;
+    cuotasSinGuardar = false;
+  }
+
+  if (lista.length === 0) {
+    tabla.innerHTML = "<tr><td style='padding:12px'>No hay coristas para este año.</td></tr>";
+    document.getElementById("tes-recaudado").textContent = "";
+    return;
+  }
+
+  // Encabezado: Corista, E F M A M J J A S O N D, Pagó
+  const encabezado = document.createElement("tr");
+  const thNombre = document.createElement("th");
+  thNombre.className = "col-nombre";
+  thNombre.textContent = "Corista";
+  encabezado.appendChild(thNombre);
+  INICIALES_MESES.forEach(function (letra, i) {
+    const th = document.createElement("th");
+    th.textContent = letra;
+    th.title = MESES_CORTOS[i];
+    encabezado.appendChild(th);
+  });
+  const thResumen = document.createElement("th");
+  thResumen.className = "col-resumen";
+  thResumen.textContent = "Pagó";
+  encabezado.appendChild(thResumen);
+  tabla.appendChild(encabezado);
+
+  let totalPagado = 0;
+  let totalEsperado = 0;
+
+  lista.forEach(function (corista) {
+    const inicio = mesInicioCuota(corista, anio);
+    const meses = 12 - inicio; // meses que le corresponden este año
+
+    const registro = registroCuota(corista.id, anio, false);
+    const guardados = registro ? registro.pagados : [];
+    const abierta = coristaAbierto === corista.id;
+
+    // En el corista abierto se muestra el borrador; en los demás, lo guardado
+    const marcas = (abierta && borradorCuotas) ? borradorCuotas : guardados;
+    const pagados = contarPagados(marcas, inicio);
+
+    // Lo recaudado solo cuenta lo que ya está guardado
+    totalPagado += contarPagados(guardados, inicio) * valor;
+    totalEsperado += meses * valor;
+
+    const fila = document.createElement("tr");
+    fila.className = "fila-corista" + (abierta ? " abierta" : "");
+
+    const tdNombre = document.createElement("td");
+    tdNombre.className = "col-nombre";
+    tdNombre.textContent = corista.nombre;
+    fila.appendChild(tdNombre);
+
+    for (let i = 0; i < 12; i++) {
+      const td = document.createElement("td");
+      const cuadro = document.createElement("span");
+      let clase = "cuadro-mes";
+      if (i < inicio) {
+        clase += " no-aplica";
+      } else if (marcas[i] === true) {
+        clase += " pagado";
+      }
+      cuadro.className = clase;
+      td.appendChild(cuadro);
+      fila.appendChild(td);
+    }
+
+    const tdResumen = document.createElement("td");
+    tdResumen.className = "col-resumen";
+    tdResumen.textContent = pagados + "/" + meses;
+    fila.appendChild(tdResumen);
+
+    fila.addEventListener("click", async function () {
+      if (!(await soltarBorrador())) {
+        return;
+      }
+      if (abierta) {
+        coristaAbierto = null;
+        borradorCuotas = null;
+      } else {
+        coristaAbierto = corista.id;
+        borradorCuotas = [];
+        for (let i = 0; i < 12; i++) {
+          borradorCuotas.push(guardados[i] === true);
+        }
+      }
+      cuotasSinGuardar = false;
+      dibujarPlanilla();
+    });
+    tabla.appendChild(fila);
+
+    // Panel desplegable con los meses de este corista
+    if (abierta) {
+      const filaPanel = document.createElement("tr");
+      filaPanel.className = "fila-panel";
+      const celda = document.createElement("td");
+      celda.colSpan = 14;
+
+      const panel = document.createElement("div");
+      panel.className = "panel-cuotas";
+
+      const botonesMeses = document.createElement("div");
+      botonesMeses.className = "tes-meses";
+      MESES_CORTOS.forEach(function (nombreMes, i) {
+        const noAplica = i < inicio;
+        const pagado = !noAplica && marcas[i] === true;
+
+        const boton = document.createElement("button");
+        boton.textContent = nombreMes + (pagado ? " · pagado" : "");
+        boton.className = noAplica ? "no-aplica" : (pagado ? "pagado" : "");
+        boton.addEventListener("click", function () {
+          if (noAplica) {
+            return; // todavía no estaba en el coro
+          }
+          if (!esAdmin()) {
+            mostrarToast("Solo la administradora puede marcar cuotas");
+            return;
+          }
+          borradorCuotas[i] = !borradorCuotas[i];
+          cuotasSinGuardar = true;
+          dibujarPlanilla();
+        });
+        botonesMeses.appendChild(boton);
+      });
+      panel.appendChild(botonesMeses);
+
+      const total = document.createElement("div");
+      total.className = "panel-total";
+      total.innerHTML = "Lleva pagado <strong>" + formatoPesos(pagados * valor) +
+        "</strong> de " + formatoPesos(meses * valor) +
+        " · Falta <strong>" + formatoPesos((meses - pagados) * valor) + "</strong>";
+      panel.appendChild(total);
+
+      if (inicio > 0) {
+        const notaIngreso = document.createElement("div");
+        notaIngreso.className = "panel-cambio";
+        notaIngreso.textContent = "Su cuota se cuenta desde " + NOMBRES_MESES[inicio] +
+          ", el mes en que ingresó al coro.";
+        panel.appendChild(notaIngreso);
+      }
+
+      if (esAdmin()) {
+        const guardar = document.createElement("button");
+        guardar.className = "btn-guardar-cuotas";
+        guardar.textContent = cuotasSinGuardar ? "Guardar cuotas" : "Cerrar";
+        guardar.addEventListener("click", function () {
+          guardarCuotas(corista.id);
+        });
+        panel.appendChild(guardar);
+      }
+
+      const cambio = registro ? textoUltimoCambio(registro) : "";
+      if (cambio) {
+        const lineaCambio = document.createElement("div");
+        lineaCambio.className = "panel-cambio";
+        lineaCambio.textContent = cambio;
+        panel.appendChild(lineaCambio);
+      }
+
+      celda.appendChild(panel);
+      filaPanel.appendChild(celda);
+      tabla.appendChild(filaPanel);
+    }
+  });
+
+  document.getElementById("tes-recaudado").textContent =
+    "Recaudado en cuotas: " + formatoPesos(totalPagado) +
+    " de " + formatoPesos(totalEsperado);
+}
+
+function guardarCuotas(coristaId) {
+  if (!esAdmin()) {
+    return;
+  }
+
+  // Solo se guarda (y se anota quién) si de verdad hubo cambios
+  if (cuotasSinGuardar && borradorCuotas) {
+    const registro = registroCuota(coristaId, anioTesoreria, true);
+    registro.pagados = borradorCuotas.slice();
+    anotarCambio(registro);
+    guardarDatos("cuotas", cuotas);
+    mostrarToast("Cuotas guardadas");
+  }
+
+  cuotasSinGuardar = false;
+  borradorCuotas = null;
+  coristaAbierto = null;
+  dibujarTesoreria();
+}
+
+async function cambiarValorCuota() {
+  if (!esAdmin()) {
+    avisar("Solo la administradora puede cambiar el valor de la cuota.", "Sin permiso");
+    return;
+  }
+
+  const respuesta = await preguntar(
+    "Valor de la cuota mensual para " + anioTesoreria + ", en pesos y sin puntos.",
+    String(valorCuota(anioTesoreria)),
+    { titulo: "Cambiar cuota", textoSi: "Guardar" }
+  );
+  if (respuesta === null) {
+    return; // canceló
+  }
+
+  const valor = Number(respuesta.replace(/\./g, "").trim());
+  if (respuesta.trim() === "" || isNaN(valor) || !Number.isInteger(valor) || valor <= 0) {
+    await avisar("El valor debe ser un número entero mayor que cero.", "Revisa el valor");
+    return;
+  }
+
+  const id = "valor-" + anioTesoreria;
+  const existente = valoresCuota.find(function (v) {
+    return v.id === id;
+  });
+  if (existente) {
+    existente.valor = valor;
+  } else {
+    valoresCuota.push({ id: id, anio: anioTesoreria, valor: valor });
+  }
+  guardarDatos("valoresCuota", valoresCuota);
+  dibujarTesoreria();
+  mostrarToast("Cuota de " + anioTesoreria + " guardada");
+}
+
+async function agregarMovimiento(tipo, valores) {
+  if (!esAdmin()) {
+    avisar("Solo la administradora puede registrar movimientos.", "Sin permiso");
+    return;
+  }
+
+  const hoy = new Date();
+  const actual = valores || {
+    fecha: crearFecha(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()),
+    monto: "",
+    observacion: ""
+  };
+
+  const cuerpo = document.createElement("div");
+
+  const etiquetaFecha = document.createElement("label");
+  etiquetaFecha.className = "modal-etiqueta";
+  etiquetaFecha.textContent = "Fecha";
+  const inputFecha = document.createElement("input");
+  inputFecha.type = "date";
+  inputFecha.className = "modal-input";
+  inputFecha.value = actual.fecha;
+
+  const etiquetaMonto = document.createElement("label");
+  etiquetaMonto.className = "modal-etiqueta";
+  etiquetaMonto.textContent = "Monto";
+  const inputMonto = document.createElement("input");
+  inputMonto.type = "number";
+  inputMonto.inputMode = "numeric";
+  inputMonto.min = "1";
+  inputMonto.step = "1";
+  inputMonto.className = "modal-input";
+  inputMonto.value = actual.monto;
+
+  const etiquetaObs = document.createElement("label");
+  etiquetaObs.className = "modal-etiqueta";
+  etiquetaObs.textContent = "Observación";
+  const inputObs = document.createElement("input");
+  inputObs.type = "text";
+  inputObs.className = "modal-input";
+  inputObs.placeholder = tipo === "ingreso" ? "Ej: Ofrenda del culto" : "Ej: Compra de partituras";
+  inputObs.value = actual.observacion;
+
+  cuerpo.appendChild(etiquetaFecha);
+  cuerpo.appendChild(inputFecha);
+  cuerpo.appendChild(etiquetaMonto);
+  cuerpo.appendChild(inputMonto);
+  cuerpo.appendChild(etiquetaObs);
+  cuerpo.appendChild(inputObs);
+
+  const resultado = await crearModal({
+    titulo: tipo === "ingreso" ? "Agregar ingreso" : "Agregar salida",
+    textoSi: "Guardar",
+    textoNo: "Cancelar",
+    cuerpo: cuerpo,
+    leer: function () {
+      return {
+        fecha: inputFecha.value,
+        monto: inputMonto.value.trim(),
+        observacion: inputObs.value.trim()
+      };
+    }
+  });
+
+  if (resultado === null) {
+    return; // canceló
+  }
+
+  if (resultado.fecha === "") {
+    await avisar("Elige la fecha del movimiento.", "Falta la fecha");
+    return agregarMovimiento(tipo, resultado);
+  }
+
+  const monto = Number(resultado.monto);
+  if (resultado.monto === "" || isNaN(monto) || monto <= 0 || !Number.isInteger(monto)) {
+    await avisar("El monto debe ser un número entero mayor que cero, sin puntos ni letras.", "Revisa el monto");
+    return agregarMovimiento(tipo, resultado);
+  }
+
+  movimientos.push({
+    id: Date.now(),
+    tipo: tipo,
+    fecha: resultado.fecha,
+    monto: monto,
+    observacion: resultado.observacion,
+    modificadoPor: pedirNombre(),
+    modificadoEn: new Date().toISOString()
+  });
+  guardarDatos("movimientos", movimientos);
+  dibujarTesoreria();
+  mostrarToast(tipo === "ingreso" ? "Ingreso guardado" : "Salida guardada");
+}
+
+async function quitarMovimiento(id) {
+  if (!esAdmin()) {
+    avisar("Solo la administradora puede quitar movimientos.", "Sin permiso");
+    return;
+  }
+  const seguro = await confirmar("Se borrará de la lista y cambiará el saldo en caja.", {
+    titulo: "¿Quitar este movimiento?", textoSi: "Quitar", peligro: true
+  });
+  if (!seguro) {
+    return;
+  }
+  movimientos = movimientos.filter(function (m) {
+    return m.id !== id;
+  });
+  guardarDatos("movimientos", movimientos);
+  dibujarTesoreria();
+}
+
+document.getElementById("btn-tes-ingreso").addEventListener("click", function () {
+  agregarMovimiento("ingreso");
+});
+document.getElementById("btn-tes-salida").addEventListener("click", function () {
+  agregarMovimiento("salida");
+});
+document.getElementById("btn-cambiar-cuota").addEventListener("click", cambiarValorCuota);
+document.getElementById("tes-anio-anterior").addEventListener("click", async function () {
+  if (!(await soltarBorrador())) {
+    return;
+  }
+  coristaAbierto = null;
+  anioTesoreria--;
+  dibujarTesoreria();
+});
+document.getElementById("tes-anio-siguiente").addEventListener("click", async function () {
+  if (!(await soltarBorrador())) {
+    return;
+  }
+  coristaAbierto = null;
+  anioTesoreria++;
+  dibujarTesoreria();
+});
+document.getElementById("nav-tesoreria").addEventListener("click", function () {
+  mostrarPantalla("tesoreria");
+  try {
+    dibujarTesoreria();
+  } catch (error) {
+    console.error(error);
+    avisar("Algo falló al dibujar Tesorería: " + error.message, "Error");
+  }
 });
 
 // ----- ARRANQUE -----

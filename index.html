@@ -133,11 +133,57 @@
     <button id="btn-guardar-reunion" class="btn-respaldo">Guardar detalles</button>
   </main>
 
+    <!-- PANTALLA 8: TESORERÍA -->
+  <main id="pantalla-tesoreria" class="pantalla oculto">
+    <h2>Tesorería</h2>
+
+    <div class="tarjeta-saldo">
+      <div class="saldo-etiqueta">Saldo en caja</div>
+      <div id="tes-saldo" class="saldo-valor"></div>
+      <div class="saldo-fila">
+        <div class="saldo-dato"><span>Ingresos</span><strong id="tes-ingresos"></strong></div>
+        <div class="saldo-dato"><span>Salidas</span><strong id="tes-salidas"></strong></div>
+      </div>
+    </div>
+
+    <div id="tes-botones" class="tes-botones">
+      <button id="btn-tes-ingreso" class="btn-ingreso">Agregar ingreso</button>
+      <button id="btn-tes-salida" class="btn-salida">Agregar salida</button>
+    </div>
+
+    <h3>Movimientos</h3>
+    <ul id="lista-movimientos"></ul>
+
+    <h3>Cuotas mensuales</h3>
+    <div class="barra-mes">
+      <button id="tes-anio-anterior">◀</button>
+      <h2 id="titulo-tes-anio"></h2>
+      <button id="tes-anio-siguiente">▶</button>
+    </div>
+
+    <div class="cuota-valor">
+      <div>
+        <span class="cuota-valor-etiqueta">Cuota mensual de este año</span>
+        <strong id="tes-valor-cuota"></strong>
+      </div>
+      <button id="btn-cambiar-cuota" class="btn-salida">Cambiar</button>
+    </div>
+
+    <div id="tes-recaudado" class="cuotas-detalle"></div>
+
+    <div class="planilla-envoltorio">
+      <table id="planilla-cuotas"></table>
+    </div>
+    <p class="cuotas-detalle">Toca un nombre para ver y registrar sus cuotas.</p>
+        <div id="tes-ex-coristas"></div>
+  </main>
+
   <!-- MENÚ INFERIOR -->
   <nav id="menu">
     <button id="nav-calendario" class="activo">Calendario</button>
     <button id="nav-coristas">Coristas</button>
     <button id="nav-resumen">Resumen</button>
+    <button id="nav-tesoreria">Tesorería</button>
     <button id="nav-respaldo">Respaldo</button>
   </nav>
 
