@@ -281,17 +281,12 @@ function dibujarCoristas() {
 
     botones.appendChild(botonEditar);
     if (esAdmin()) {
-      botones.appendChild(boton);
-
-      const botonFecha = document.createElement("button");
-      botonFecha.className = "btn-editar";
-      botonFecha.textContent = "Cambiar fecha";
-      botonFecha.addEventListener("click", function () {
-        cambiarFechaBaja(corista.id);
-      });
-    botones.appendChild(botonFecha);
-
-    const botonEliminar = document.createElement("button");
+      botones.appendChild(botonQuitar);
+    }
+    item.appendChild(nombre);
+    item.appendChild(botones);
+    lista.appendChild(item);
+  });
 
   if (exCoristas.length > 0) {
     const titulo = document.createElement("li");
@@ -320,9 +315,18 @@ function dibujarCoristas() {
       boton.addEventListener("click", function () {
         reactivarCorista(corista.id);
       });
-      // Solo la administradora puede reactivar o eliminar
+
+      // Solo la administradora puede reactivar, cambiar la fecha o eliminar
       if (esAdmin()) {
         botones.appendChild(boton);
+
+        const botonFecha = document.createElement("button");
+        botonFecha.className = "btn-editar";
+        botonFecha.textContent = "Cambiar fecha";
+        botonFecha.addEventListener("click", function () {
+          cambiarFechaBaja(corista.id);
+        });
+        botones.appendChild(botonFecha);
 
         const botonEliminar = document.createElement("button");
         botonEliminar.textContent = "Eliminar";
@@ -338,7 +342,6 @@ function dibujarCoristas() {
     });
   }
 }
-
 // ----- CUMPLEAÑOS: meses, formato y quiénes cumplen cada día -----
 const NOMBRES_MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio",
   "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
