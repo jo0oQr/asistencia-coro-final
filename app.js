@@ -281,12 +281,17 @@ function dibujarCoristas() {
 
     botones.appendChild(botonEditar);
     if (esAdmin()) {
-      botones.appendChild(botonQuitar);
-    }
-    item.appendChild(nombre);
-    item.appendChild(botones);
-    lista.appendChild(item);
-  });
+      botones.appendChild(boton);
+
+      const botonFecha = document.createElement("button");
+      botonFecha.className = "btn-editar";
+      botonFecha.textContent = "Cambiar fecha";
+      botonFecha.addEventListener("click", function () {
+        cambiarFechaBaja(corista.id);
+      });
+    botones.appendChild(botonFecha);
+
+    const botonEliminar = document.createElement("button");
 
   if (exCoristas.length > 0) {
     const titulo = document.createElement("li");
@@ -524,23 +529,105 @@ function agregarCorista() {
   dibujarCoristas();
 }
 
+// Ventana para elegir la fecha de baja. Devuelve la fecha ("2026-10-17") o null si cancela
+async function pedirFechaBaja(corista, titulo, textoSi, fechaInicial, peligro) {
+  const hoy = new Date();
+  const hoyTexto = crearFecha(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+
+  const cuerpo = document.createElement("div");
+
+  const etiqueta = document.createElement("label");
+  etiqueta.className = "modal-etiqueta";
+  etiqueta.textContent = "Fecha de baja";
+
+  const inputFecha = document.createElement("input");
+  inputFecha.type = "date";
+  inputFecha.className = "modal-input";
+  inputFecha.value = fechaInicial || hoyTexto;
+  inputFecha.max = hoyTexto;
+
+  cuerpo.appendChild(etiqueta);
+  cuerpo.appendChild(inputFecha);
+
+  const fecha = await crearModal({
+    titulo: titulo,
+    mensaje: "Su historial y su porcentaje se mantienen hasta esa fecha, pero ya no aparecerá en las asistencias nuevas.",
+    textoSi: textoSi,
+    textoNo: "Cancelar",
+    peligro: peligro,
+    cuerpo: cuerpo,
+    leer: function () {
+      return inputFecha.value;
+    }
+  });
+
+  if (fecha === null) {
+    return null; // canceló
+  }
+
+  if (fecha === "") {
+    await avisar("Elige la fecha de baja.", "Falta la fecha");
+    return pedirFechaBaja(corista, titulo, textoSi, hoyTexto, peligro);
+  }
+  if (fecha > hoyTexto) {
+    await avisar("La fecha de baja no puede ser en el futuro.", "Fecha no válida");
+    return pedirFechaBaja(corista, titulo, textoSi, hoyTexto, peligro);
+  }
+  if (corista.fechaIngreso && fecha < corista.fechaIngreso) {
+    await avisar("La fecha de baja es anterior a su ingreso al coro. Revísala.", "Fecha no válida");
+    return pedirFechaBaja(corista, titulo, textoSi, corista.fechaIngreso, peligro);
+  }
+
+  return fecha;
+}
+
 async function quitarCorista(id) {
   if (!esAdmin()) {
     avisar("Solo la administradora puede dar de baja coristas.", "Sin permiso");
     return;
   }
-  const seguro = await confirmar("Su historial y su porcentaje se mantienen hasta hoy, pero ya no aparecerá en las asistencias nuevas.", { titulo: "¿Dar de baja a este corista?", textoSi: "Dar de baja", peligro: true });
-  if (!seguro) {
+  const corista = coristas.find(function (c) {
+    return c.id === id;
+  });
+  if (!corista) {
+    return;
+  }
+
+  const fecha = await pedirFechaBaja(corista, "¿Dar de baja a " + corista.nombre + "?", "Dar de baja", null, true);
+  if (fecha === null) {
+    return;
+  }
+
+  corista.fechaBaja = fecha;
+  anotarCambio(corista);
+  guardarDatos("coristas", coristas);
+  dibujarCoristas();
+  dibujarCalendario();
+}
+
+async function cambiarFechaBaja(id) {
+  if (!esAdmin()) {
+    avisar("Solo la administradora puede cambiar la fecha de baja.", "Sin permiso");
     return;
   }
   const corista = coristas.find(function (c) {
     return c.id === id;
   });
-  const hoy = new Date();
-  corista.fechaBaja = crearFecha(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+  if (!corista || !corista.fechaBaja) {
+    return;
+  }
+
+  const fecha = await pedirFechaBaja(corista, "Cambiar fecha de baja", "Guardar", corista.fechaBaja, false);
+  if (fecha === null) {
+    return;
+  }
+
+  corista.fechaBaja = fecha;
   anotarCambio(corista);
   guardarDatos("coristas", coristas);
   dibujarCoristas();
+  dibujarCalendario();
+  mostrarToast("Fecha de baja guardada");
 }
 
 function reactivarCorista(id) {
@@ -1489,6 +1576,52 @@ let vistaResumen = "corista"; // "corista" o "general"
 let mesResumen = new Date();
 mesResumen.setDate(1);
 
+// ----- INACTIVIDAD Y BAJO PORCENTAJE -----
+const DIAS_INACTIVO = 14;        // más de 2 semanas sin asistir = inactivo
+const PORCENTAJE_BAJO = 30;      // bajo este % sale la burbuja
+const MIN_CULTOS_BAJO = 2;       // no avisa "bajo %" con menos de 2 cultos guardados en el mes
+const ESTADOS_ASISTIO = ["subio"]; // para contar "Se quedó abajo" también, usa ["subio", "abajo"]
+
+function diasEntre(fecha1, fecha2) {
+  return Math.round((leerFecha(fecha2) - leerFecha(fecha1)) / 86400000);
+}
+
+// Inactivo: entre su última asistencia y el último culto guardado pasaron más
+// de 2 semanas. El permiso NO cuenta como asistencia.
+function estaInactivo(corista) {
+  if (corista.fechaBaja) {
+    return false;
+  }
+
+  const cultos = actividades.filter(function (a) {
+    return a.tipo === "culto" && a.cerrada && coristaVigente(corista, a.fecha);
+  }).sort(function (a, b) {
+    return a.fecha.localeCompare(b.fecha);
+  });
+
+  if (cultos.length === 0) {
+    return false;
+  }
+
+  const ultimoCulto = cultos[cultos.length - 1].fecha;
+
+  let ultimaAsistencia = null;
+  cultos.forEach(function (culto) {
+    if (ESTADOS_ASISTIO.includes(estadoDe(culto, corista))) {
+      ultimaAsistencia = culto.fecha;
+    }
+  });
+
+  // Si nunca ha asistido, se cuenta desde su ingreso o desde el primer culto guardado
+  let referencia = ultimaAsistencia;
+  if (!referencia) {
+    referencia = (corista.fechaIngreso && corista.fechaIngreso > cultos[0].fecha)
+      ? corista.fechaIngreso
+      : cultos[0].fecha;
+  }
+
+  return diasEntre(referencia, ultimoCulto) > DIAS_INACTIVO;
+}
 
 function crearFilaResumen(nombre, detalle, porcentaje, destacada) {
   const item = document.createElement("li");
@@ -1519,7 +1652,7 @@ function crearFilaResumen(nombre, detalle, porcentaje, destacada) {
   return item;
 }
 
-function crearDetalleCorista(subio, total, nota) {
+function crearDetalleCorista(subio, total, nota, fichas) {
   const caja = document.createElement("div");
 
   const principal = document.createElement("div");
@@ -1532,6 +1665,19 @@ function crearDetalleCorista(subio, total, nota) {
     aviso.className = "texto-baja";
     aviso.textContent = nota;
     caja.appendChild(aviso);
+  }
+
+  // Burbujas bajo el nombre
+  if (fichas && fichas.length > 0) {
+    const contenedor = document.createElement("div");
+    contenedor.className = "fichas";
+    fichas.forEach(function (f) {
+      const burbuja = document.createElement("span");
+      burbuja.className = "ficha " + f[1];
+      burbuja.textContent = f[0];
+      contenedor.appendChild(burbuja);
+    });
+    caja.appendChild(contenedor);
   }
 
   return caja;
@@ -1619,16 +1765,55 @@ function dibujarResumenMensual() {
     return;
   }
 
-  if (vistaResumen === "corista") {
+    if (vistaResumen === "corista") {
+    // ----- Ventana con el total de coristas e inactivos -----
+    const vigentes = coristas.filter(function (c) { return !c.fechaBaja; });
+    const inactivos = vigentes.filter(estaInactivo);
+    const dadosDeBaja = coristas.length - vigentes.length;
+
+    const ventana = document.createElement("li");
+    ventana.id = "resumen-coristas";
+
+    const tarjetas = document.createElement("div");
+    tarjetas.className = "tarjetas";
+    [
+      ["Total de coristas", vigentes.length],
+      ["Activos", vigentes.length - inactivos.length],
+      ["Inactivos", inactivos.length]
+    ].forEach(function (par) {
+      const dato = document.createElement("div");
+      dato.className = "dato-resumen";
+      const etiqueta = document.createElement("span");
+      etiqueta.textContent = par[0];
+      const numero = document.createElement("strong");
+      numero.textContent = par[1];
+      dato.appendChild(etiqueta);
+      dato.appendChild(numero);
+      tarjetas.appendChild(dato);
+    });
+    ventana.appendChild(tarjetas);
+
+    if (inactivos.length > 0) {
+      const nombres = document.createElement("div");
+      nombres.className = "texto-baja";
+      nombres.textContent = "Inactivos: " + inactivos.map(function (c) { return c.nombre; }).join(", ");
+      ventana.appendChild(nombres);
+    }
+    if (dadosDeBaja > 0) {
+      const bajas = document.createElement("div");
+      bajas.className = "texto-baja";
+      bajas.textContent = "Ya no están en el coro: " + dadosDeBaja;
+      ventana.appendChild(bajas);
+    }
+    lista.appendChild(ventana);
+
     // ----- Vista por corista -----
     coristas.forEach(function (corista) {
-      // Cultos del mes hasta la baja (si la tiene)
-      const totalCorista = contarCultosDelMes(anio, mes, corista.fechaBaja);
-
-      // Si lo dieron de baja antes de este mes, no aparece
-      if (corista.fechaBaja && totalCorista === 0) {
+            // Los coristas dados de baja ya no aparecen en esta lista
+      if (corista.fechaBaja) {
         return;
       }
+      const totalCorista = contarCultosDelMes(anio, mes);
 
       const cultosCorista = cultos.filter(function (culto) {
         return coristaVigente(corista, culto.fecha);
@@ -1642,12 +1827,50 @@ function dibujarResumenMensual() {
       });
 
       const base = cultosCorista.length - (PERMISO_DESCUENTA ? permiso : 0);
-      const porcentaje = base > 0 ? Math.round((subio / base) * 100) + "%" : "—";
-      const nota = corista.fechaBaja ? textoBaja(corista) : "";
-      const detalle = crearDetalleCorista(subio, totalCorista, nota);
+      const pct = base > 0 ? Math.round((subio / base) * 100) : null;
+      const porcentaje = pct === null ? "—" : pct + "%";
+      const nota = "";
 
+      const fichas = [];
+      if (estaInactivo(corista)) {
+        fichas.push(["Inactivo", "ficha-inactivo"]);
+      }
+      if (pct !== null && pct < PORCENTAJE_BAJO && cultosCorista.length >= MIN_CULTOS_BAJO) {
+        fichas.push(["Bajo porcentaje de asistencia", "ficha-bajo"]);
+      }
+
+      const detalle = crearDetalleCorista(subio, totalCorista, nota, fichas);
       lista.appendChild(crearFilaResumen(corista.nombre, detalle, porcentaje, false));
     });
+
+        // ----- Coristas que ya no están (sin porcentaje) -----
+    const coristasDeBaja = coristas.filter(function (c) {
+      return c.fechaBaja;
+    });
+
+    if (coristasDeBaja.length > 0) {
+      const tituloBaja = document.createElement("li");
+      tituloBaja.className = "titulo-ex";
+      tituloBaja.textContent = "Ya no están en el coro";
+      lista.appendChild(tituloBaja);
+
+      coristasDeBaja.forEach(function (corista) {
+        const itemBaja = document.createElement("li");
+
+        const info = document.createElement("div");
+        const nombreBaja = document.createElement("div");
+        nombreBaja.className = "nombre-resumen";
+        nombreBaja.textContent = corista.nombre;
+        const textoDeBaja = document.createElement("div");
+        textoDeBaja.className = "texto-baja";
+        textoDeBaja.textContent = textoBaja(corista);
+
+        info.appendChild(nombreBaja);
+        info.appendChild(textoDeBaja);
+        itemBaja.appendChild(info);
+        lista.appendChild(itemBaja);
+      });
+    }
   } else {
     // ----- Vista general -----
     let totalSubio = 0, totalAbajo = 0, totalPermiso = 0, totalAusente = 0, totalBase = 0;
@@ -2460,6 +2683,47 @@ document.getElementById("nav-tesoreria").addEventListener("click", function () {
     console.error(error);
     avisar("Algo falló al dibujar Tesorería: " + error.message, "Error");
   }
+});
+
+// ----- VOLVER AL INICIO -----
+// Si sales de la app y vuelves después de este tiempo, empieza otra vez en el calendario
+const MINUTOS_PARA_VOLVER = 1;
+let momentoSalida = null;
+
+function volverAlInicio() {
+  fechaSeleccionada = null;
+  fechaActual = new Date();
+  fechaActual.setDate(1);
+  mesResumen = new Date();
+  mesResumen.setDate(1);
+  coristaAbierto = null;
+  borradorCuotas = null;
+  anioTesoreria = new Date().getFullYear();
+
+  dibujarCalendario();
+  mostrarPantalla("calendario");
+  window.scrollTo(0, 0);
+}
+
+document.addEventListener("visibilitychange", function () {
+  if (document.hidden) {
+    momentoSalida = Date.now();
+    return;
+  }
+  if (momentoSalida === null) {
+    return;
+  }
+  const minutos = (Date.now() - momentoSalida) / 60000;
+  momentoSalida = null;
+
+  if (minutos < MINUTOS_PARA_VOLVER) {
+    return;
+  }
+  // Si hay cambios sin guardar (reunión o cuotas), no se mueve nada para no perderlos
+  if (reunionModificada || cuotasSinGuardar) {
+    return;
+  }
+  volverAlInicio();
 });
 
 // ----- ARRANQUE -----

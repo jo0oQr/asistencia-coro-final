@@ -30,11 +30,48 @@ header h1 {
 }
 
 main {
-  padding: 12px;
+  padding: 12px 12px 80px; /* abajo deja espacio para que el menú no tape contenido */
   max-width: 500px;
   margin: 0 auto;
 }
 
+/* Oculta de verdad, sin importar otras reglas de "display" */
+.oculto {
+  display: none !important;
+}
+
+.texto-baja {
+  font-size: 12px;
+  color: #777;
+  margin-top: 3px;
+}
+
+/* ===== Menú inferior ===== */
+#menu {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  background: white;
+  border-top: 1px solid #ccc;
+}
+
+#menu button {
+  flex: 1;
+  padding: 12px 4px;
+  border: none;
+  background: white;
+  font-size: 13px;
+}
+
+#menu button.activo {
+  background: var(--principal-claro);
+  font-weight: bold;
+  color: var(--principal);
+}
+
+/* ===== Calendario ===== */
 .barra-mes {
   display: flex;
   justify-content: space-between;
@@ -81,6 +118,7 @@ main {
   align-items: center;
   padding-top: 6px;
   font-size: 15px;
+  cursor: pointer;
 }
 
 .dia.vacio {
@@ -97,92 +135,11 @@ main {
   font-weight: bold;
 }
 
-/* Pantallas y menú */
-.oculto {
-  display: none;
-}
-
-main {
-  padding-bottom: 80px; /* deja espacio para que el menú no tape contenido */
-}
-
-#menu {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  background: white;
-  border-top: 1px solid #ccc;
-}
-
-#menu button {
-  flex: 1;
-  padding: 14px;
-  border: none;
-  background: white;
-  font-size: 15px;
-}
-
-#menu button.activo {
-  background: var(--principal-claro);
-  font-weight: bold;
-  color: var(--principal);
-}
-
-/* Pantalla de coristas */
-.agregar-corista {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.agregar-corista input {
-  flex: 1;
-  padding: 12px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-}
-
-.agregar-corista button {
-  background: var(--suave);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 0 16px;
-  font-size: 15px;
-}
-
-#lista-coristas {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-#lista-coristas li {
-  background: white;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-#lista-coristas li button {
-  background: var(--secundario);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 10px;
+.dia.seleccionado {
+  outline: 3px solid #2e9e5b;
 }
 
 /* Puntitos de colores en el calendario */
-.dia {
-  cursor: pointer;
-}
-
 .puntos {
   display: flex;
   gap: 3px;
@@ -198,189 +155,26 @@ main {
 .punto.culto { background: #2e9e5b; }
 .punto.reunion { background: #2f7de1; }
 .punto.ensayo { background: #e69a1c; }
+.punto.vigilia { background: #7b4fd6; }
 .punto.sinculto { background: #999; }
+.punto.cumple { background: #d6639a; }
 
-/* Pantalla del día */
-#btn-volver {
-  background: none;
-  border: none;
-  color: var(--principal);
-  font-size: 16px;
-  padding: 8px 0;
-}
-
-#titulo-dia {
-  text-transform: capitalize;
-  margin: 6px 0 14px;
-}
-
-#lista-actividades {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 16px;
-}
-
-#lista-actividades li {
-  background: white;
-  border-radius: 8px;
-  padding: 14px 12px;
-  margin-bottom: 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-#lista-actividades li.pendiente {
-  border: 2px dashed var(--principal);
-}
-
-#lista-actividades li button {
-  background: var(--secundario);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 10px;
-}
-
-#lista-actividades li.pendiente button {
-  background: var(--principal);
-}
-
-.botones-tipo {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.botones-tipo button {
-  background: white;
-  border: 2px solid var(--principal);
-  color: var(--principal);
-  border-radius: 8px;
-  padding: 12px;
-  font-size: 15px;
-}
-
-/* Botones dentro de cada actividad */
-.botones-act {
-  display: flex;
-  gap: 6px;
-}
-
-#lista-actividades li button.btn-asistencia {
-  background: var(--principal);
-}
-
-/* Pantalla de asistencia */
-#btn-volver-dia {
-  background: none;
-  border: none;
-  color: var(--principal);
-  font-size: 16px;
-  padding: 8px 0;
-}
-
-#titulo-asistencia {
-  margin: 6px 0 4px;
-}
-
-#resumen-asistencia {
-  margin: 0 0 12px;
-  color: #555;
-  font-size: 14px;
-}
-
-#lista-asistencia {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-#lista-asistencia li {
-  background: white;
-  border-radius: 8px;
-  padding: 10px 12px;
-  margin-bottom: 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
-
-#lista-asistencia li button {
-  border: none;
-  border-radius: 8px;
-  padding: 10px 12px;
-  font-size: 14px;
-  min-width: 140px;
-  color: white;
-}
-
-.estado-ausente { background: #b0b0b0; }
-.estado-subio { background: #2e9e5b; }
-.estado-abajo { background: #e69a1c; }
-.estado-permiso { background: #2f7de1; }
-.estado-asistio { background: #2e9e5b; }
-
-#btn-cerrar-asistencia {
-  width: 100%;
-  margin-top: 12px;
-  padding: 14px;
-  border: none;
-  border-radius: 8px;
-  background: var(--principal);
-  color: white;
-  font-size: 16px;
-}
-
-#btn-cerrar-asistencia.cerrada {
-  background: white;
-  color: var(--principal);
-  border: 2px solid var(--principal);
-}
-
-/* Estado en modo solo lectura (actividad cerrada) */
-#lista-asistencia li .etiqueta-estado {
-  border-radius: 8px;
-  padding: 10px 12px;
-  font-size: 14px;
-  min-width: 140px;
-  text-align: center;
-  color: white;
-}
-
-.dia.seleccionado {
-  outline: 3px solid #2e9e5b;
-}
-
+/* ===== Registro del día (debajo del calendario) ===== */
 #detalle-dia {
   margin-top: 16px;
   background: white;
-  border-radius: 8px;
-  padding: 12px;
+  padding: 16px;
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
 }
 
 #detalle-dia h3 {
-  margin: 0 0 10px;
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+  font-size: 18px;
+  color: var(--principal);
   text-transform: capitalize;
-}
-
-#detalle-dia h4 {
-  margin: 14px 0 6px;
-}
-
-#detalle-dia ul {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 8px;
-}
-
-#detalle-dia li {
-  display: flex;
-  justify-content: space-between;
-  padding: 6px 0;
-  border-bottom: 1px solid #eee;
-  font-size: 15px;
+  border-bottom: 2px solid var(--principal-claro);
 }
 
 #detalle-dia .vacio-detalle {
@@ -396,6 +190,7 @@ main {
   padding: 10px 12px;
   font-size: 14px;
   margin-top: 6px;
+  margin-right: 6px;
 }
 
 #detalle-dia button.secundario {
@@ -404,378 +199,6 @@ main {
   border: 2px solid var(--principal);
   display: block;
   margin-top: 14px;
-}
-
-#info-resumen {
-  color: #555;
-  font-size: 14px;
-  margin: 0 0 12px;
-}
-
-#lista-resumen {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-#lista-resumen li {
-  background: white;
-  border-radius: 8px;
-  padding: 10px 12px;
-  margin-bottom: 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
-
-#lista-resumen .detalle-corista {
-  font-size: 12px;
-  color: #666;
-  margin-top: 3px;
-}
-
-#lista-resumen .porcentaje {
-  font-size: 20px;
-  font-weight: bold;
-  color: var(--principal);
-}
-
-#info-respaldo {
-  color: #555;
-  font-size: 14px;
-  margin: 0 0 16px;
-}
-
-.btn-respaldo {
-  display: block;
-  width: 100%;
-  padding: 14px;
-  margin-bottom: 10px;
-  border: none;
-  border-radius: 8px;
-  background: var(--principal);
-  color: white;
-  font-size: 16px;
-}
-
-.btn-respaldo.secundario {
-  background: white;
-  color: var(--principal);
-  border: 2px solid var(--principal);
-}
-
-/* Con 4 botones en el menú, achicamos un poco el texto */
-#menu button {
-  font-size: 13px;
-  padding: 12px 4px;
-}
-
-.botones-corista {
-  display: flex;
-  gap: 6px;
-}
-
-#lista-coristas li button.btn-editar {
-  background: var(--principal);
-}
-
-.selector-vista {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.selector-vista button {
-  flex: 1;
-  padding: 10px;
-  border: 2px solid var(--principal);
-  border-radius: 8px;
-  background: white;
-  color: var(--principal);
-  font-size: 15px;
-}
-
-.selector-vista button.activo {
-  background: var(--principal);
-  color: white;
-}
-
-#input-usuario {
-  width: 100%;
-  padding: 12px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  margin: 4px 0 16px;
-}
-
-#ultimo-cambio,
-.ultimo-cambio-detalle {
-  color: #777;
-  font-size: 13px;
-  margin: 0 0 12px;
-}
-
-#lista-resumen .nombre-resumen {
-  font-size: 16px;
-  font-weight: bold;
-  color: #222;
-}
-
-#lista-resumen .cultos-principal {
-  font-size: 14px;
-  color: #444;
-  margin-top: 4px;
-}
-
-#lista-resumen .cultos-principal strong {
-  color: var(--principal);
-  font-size: 16px;
-}
-
-#lista-resumen .fichas {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-#lista-resumen .ficha {
-  font-size: 12px;
-  padding: 3px 8px;
-  border-radius: 12px;
-  color: white;
-}
-
-#lista-resumen .ficha-abajo { background: #e69a1c; }
-#lista-resumen .ficha-permiso { background: #2f7de1; }
-#lista-resumen .ficha-ausente { background: #b0b0b0; }
-
-#lista-coristas li.titulo-ex {
-  background: transparent;
-  font-weight: bold;
-  color: #666;
-  padding: 12px 4px 4px;
-}
-
-.texto-baja {
-  font-size: 12px;
-  color: #777;
-  margin-top: 3px;
-}
-
-/* ===== Ventanas de aviso (modal) ===== */
-.modal-fondo {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 100;
-  background: rgba(34, 28, 70, 0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  animation: modal-aparecer 0.15s ease;
-}
-
-.modal-caja {
-  background: white;
-  border-radius: 14px;
-  padding: 20px;
-  width: 100%;
-  max-width: 360px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-  animation: modal-subir 0.18s ease;
-}
-
-.modal-titulo {
-  margin: 0 0 8px;
-  font-size: 18px;
-  color: var(--principal);
-}
-
-.modal-texto {
-  margin: 0 0 16px;
-  font-size: 15px;
-  line-height: 1.4;
-  color: #333;
-  white-space: pre-line;
-}
-
-.modal-input {
-  width: 100%;
-  padding: 12px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  margin-bottom: 16px;
-}
-
-.modal-input:focus {
-  outline: 2px solid var(--principal);
-  border-color: var(--principal);
-}
-
-.modal-botones {
-  display: flex;
-  gap: 8px;
-}
-
-.modal-btn {
-  flex: 1;
-  padding: 12px;
-  border: none;
-  border-radius: 8px;
-  background: var(--principal);
-  color: white;
-  font-size: 15px;
-}
-
-.modal-btn.secundario {
-  background: white;
-  color: var(--principal);
-  border: 2px solid var(--principal);
-}
-
-.modal-btn.peligro {
-  background: #d9534f;
-}
-
-@keyframes modal-aparecer {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes modal-subir {
-  from { transform: translateY(12px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-/* Mensajito que se va solo */
-.toast {
-  position: fixed;
-  left: 50%;
-  bottom: 80px;
-  transform: translateX(-50%);
-  background: #333;
-  color: white;
-  padding: 10px 16px;
-  border-radius: 20px;
-  font-size: 14px;
-  z-index: 90;
-  max-width: 90%;
-  text-align: center;
-  opacity: 0;
-  transition: opacity 0.25s;
-}
-
-.toast.visible {
-  opacity: 1;
-}
-
-/* ===== Detalles de la reunión ===== */
-#btn-volver-reunion {
-  background: none;
-  border: none;
-  color: var(--principal);
-  font-size: 16px;
-  padding: 8px 0;
-}
-
-#titulo-reunion {
-  text-transform: capitalize;
-  margin: 6px 0 4px;
-}
-
-#ultimo-cambio-reunion {
-  color: #777;
-  font-size: 13px;
-  margin: 0 0 4px;
-}
-
-#pantalla-reunion label {
-  display: block;
-  font-weight: bold;
-  font-size: 14px;
-  color: var(--principal);
-  margin: 16px 0 4px;
-}
-
-#pantalla-reunion input,
-#pantalla-reunion textarea {
-  width: 100%;
-  padding: 12px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background: white;
-  font-family: Arial, sans-serif;
-}
-
-#pantalla-reunion textarea {
-  resize: vertical;
-}
-
-#btn-guardar-reunion {
-  margin-top: 20px;
-}
-
-.resumen-reunion {
-  margin: 2px 0;
-  font-size: 14px;
-  color: #444;
-}
-
-.resumen-reunion.texto-largo {
-  white-space: pre-wrap;
-  color: #666;
-}
-
-/* Que los botones de cada actividad no se salgan en pantallas angostas */
-.botones-act {
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-#detalle-dia button {
-  margin-right: 6px;
-}
-
-/* Reunión en modo solo lectura */
-#pantalla-reunion input:disabled,
-#pantalla-reunion textarea:disabled {
-  background: #f7f7fb;
-  color: #222;
-  opacity: 1;
-  -webkit-text-fill-color: #222;
-}
-
-#aviso-reunion {
-  background: var(--principal-claro);
-  border-radius: 8px;
-  padding: 10px 12px;
-  font-size: 14px;
-  margin: 8px 0 0;
-}
-
-/* ===== Registros más agradables (pegar al FINAL de estilos.css) ===== */
-
-/* Registro del día, debajo del calendario */
-#detalle-dia {
-  padding: 16px;
-  border-radius: 14px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-}
-
-#detalle-dia h3 {
-  font-size: 18px;
-  color: var(--principal);
-  margin: 0 0 14px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid var(--principal-claro);
 }
 
 .bloque {
@@ -790,13 +213,19 @@ main {
 .bloque.tipo-culto { border-left-color: #2e9e5b; }
 .bloque.tipo-reunion { border-left-color: #2f7de1; }
 .bloque.tipo-ensayo { border-left-color: #e69a1c; }
+.bloque.tipo-vigilia { border-left-color: #7b4fd6; }
 .bloque.tipo-sinculto { border-left-color: #999; }
+.bloque.tipo-cumple { border-left-color: #d6639a; }
 
 .bloque-encabezado {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
+}
+
+.bloque-encabezado.clicable {
+  cursor: pointer;
 }
 
 #detalle-dia .bloque-encabezado h4 {
@@ -811,6 +240,12 @@ main {
   border-radius: 12px;
   background: var(--principal-claro);
   color: var(--principal);
+}
+
+.ultimo-cambio-detalle {
+  color: #777;
+  font-size: 13px;
+  margin: 0 0 12px;
 }
 
 .bloque .ultimo-cambio-detalle {
@@ -865,16 +300,19 @@ main {
 .lista-asistentes {
   list-style: none;
   padding: 0;
-  margin: 8px 0 4px;
+  margin: 0 0 8px;
   background: white;
   border: 1px solid #ececf3;
   border-radius: 8px;
 }
 
 #detalle-dia .lista-asistentes li {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
   padding: 9px 12px;
   border-bottom: 1px solid #f0f0f5;
+  font-size: 15px;
 }
 
 #detalle-dia .lista-asistentes li:last-child {
@@ -904,76 +342,331 @@ main {
   margin: 0;
 }
 
-/* Pantalla de asistencia */
+/* ===== Colores de los estados de asistencia ===== */
+.estado-ausente { background: #b0b0b0; }
+.estado-subio { background: #2e9e5b; }
+.estado-abajo { background: #e69a1c; }
+.estado-permiso { background: #2f7de1; }
+.estado-asistio { background: #2e9e5b; }
+
+/* ===== Coristas ===== */
+.agregar-corista {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.agregar-corista input {
+  flex: 1;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.agregar-corista button {
+  background: var(--suave);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0 16px;
+  font-size: 15px;
+}
+
+#lista-coristas {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#lista-coristas li {
+  background: white;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#lista-coristas li button {
+  background: var(--secundario);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+#lista-coristas li button.btn-editar {
+  background: var(--principal);
+}
+
+#lista-coristas li.titulo-ex {
+  background: transparent;
+  font-weight: bold;
+  color: #666;
+  padding: 12px 4px 4px;
+}
+
+.botones-corista {
+  display: flex;
+  gap: 6px;
+}
+
+/* ===== Pantalla del día (agregar o quitar actividades) ===== */
+#btn-volver,
+#btn-volver-dia,
+#btn-volver-reunion {
+  background: none;
+  border: none;
+  color: var(--principal);
+  font-size: 16px;
+  padding: 8px 0;
+}
+
+#titulo-dia {
+  text-transform: capitalize;
+  margin: 6px 0 14px;
+}
+
+#lista-actividades {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+}
+
+#lista-actividades li {
+  background: white;
+  border-radius: 8px;
+  padding: 14px 12px;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#lista-actividades li.pendiente {
+  border: 2px dashed var(--principal);
+}
+
+#lista-actividades li button {
+  background: var(--secundario);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+#lista-actividades li.pendiente button,
+#lista-actividades li button.btn-asistencia {
+  background: var(--principal);
+}
+
+/* Botones dentro de cada actividad */
+.botones-act {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.botones-tipo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.botones-tipo button {
+  background: white;
+  border: 2px solid var(--principal);
+  color: var(--principal);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 15px;
+}
+
+/* ===== Pantalla de asistencia ===== */
 #titulo-asistencia {
+  margin: 6px 0 4px;
   text-transform: capitalize;
   color: var(--principal);
 }
 
 #resumen-asistencia {
+  margin: 0 0 12px;
   background: var(--principal-claro);
   color: #333;
   border-radius: 8px;
   padding: 10px 12px;
+  font-size: 14px;
 }
 
 #resumen-asistencia:empty {
   display: none;
 }
 
+#ultimo-cambio {
+  color: #777;
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+
+#lista-asistencia {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
 #lista-asistencia li {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
+  background: white;
+  border-radius: 8px;
   padding: 10px 12px 10px 14px;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
 }
 
 #lista-asistencia li > span:first-child {
   font-size: 16px;
 }
 
-#lista-asistencia li button,
+#lista-asistencia li button {
+  border: none;
+  border-radius: 20px;
+  padding: 10px 12px;
+  font-size: 14px;
+  min-width: 150px;
+  color: white;
+}
+
+/* Estado en modo solo lectura (actividad cerrada) */
 #lista-asistencia li .etiqueta-estado {
   border-radius: 20px;
+  padding: 10px 12px;
+  font-size: 14px;
   min-width: 150px;
+  text-align: center;
+  color: white;
 }
 
-/* Ficha de la reunión */
-#titulo-reunion {
+#btn-cerrar-asistencia {
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  background: var(--principal);
+  color: white;
+  font-size: 16px;
+}
+
+#btn-cerrar-asistencia.cerrada {
+  background: white;
   color: var(--principal);
+  border: 2px solid var(--principal);
 }
 
-#pantalla-reunion label {
-  border-left: 3px solid var(--principal);
-  padding-left: 8px;
+/* ===== Resumen mensual ===== */
+.selector-vista {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
-#pantalla-reunion input,
-#pantalla-reunion textarea {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-#pantalla-reunion input:focus,
-#pantalla-reunion textarea:focus {
-  outline: 2px solid var(--principal);
-  border-color: var(--principal);
-}
-
-#resumen-coristas .dato-resumen {
+.selector-vista button {
   flex: 1;
+  padding: 10px;
+  border: 2px solid var(--principal);
+  border-radius: 8px;
+  background: white;
+  color: var(--principal);
+  font-size: 15px;
+}
+
+.selector-vista button.activo {
+  background: var(--principal);
+  color: white;
+}
+
+#info-resumen {
+  color: #555;
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+
+#lista-resumen {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#lista-resumen li {
   background: white;
   border-radius: 8px;
   padding: 10px 12px;
+  margin-bottom: 6px;
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
 }
 
-#resumen-coristas .dato-resumen span {
+#lista-resumen .nombre-resumen {
+  font-size: 16px;
+  font-weight: bold;
+  color: #222;
+}
+
+#lista-resumen .detalle-corista {
   font-size: 12px;
   color: #666;
+  margin-top: 3px;
 }
 
-#resumen-coristas {
-  margin-bottom: 12px;
+#lista-resumen .cultos-principal {
+  font-size: 14px;
+  color: #444;
+  margin-top: 4px;
+}
+
+#lista-resumen .cultos-principal strong {
+  color: var(--principal);
+  font-size: 16px;
+}
+
+#lista-resumen .porcentaje {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--principal);
+}
+
+/* Burbujas bajo el nombre (Inactivo, Bajo porcentaje) */
+#lista-resumen .fichas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+#lista-resumen .ficha {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  color: white;
+}
+
+#lista-resumen .ficha-inactivo { background: #6c6c6c; }
+#lista-resumen .ficha-bajo { background: #d9534f; }
+
+/* Ventana con el total de coristas e inactivos */
+#lista-resumen li#resumen-coristas {
+  display: block;
+  background: white;
+  border: 2px solid var(--principal);
+  padding: 12px;
 }
 
 #resumen-coristas .tarjetas {
@@ -1001,23 +694,166 @@ main {
   color: var(--principal);
 }
 
-.linea-sello {
-  margin-top: 4px;
+/* ===== Respaldo ===== */
+#info-respaldo {
+  color: #555;
+  font-size: 14px;
+  margin: 0 0 16px;
 }
 
-/* ===== Cumpleaños (pegar al FINAL de estilos.css) ===== */
+#input-usuario {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin: 4px 0 16px;
+}
 
-/* Punto y franja de color de los cumpleaños */
-.punto.cumple { background: #d6639a; }
-.bloque.tipo-cumple { border-left-color: #d6639a; }
+.btn-respaldo {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 10px;
+  border: none;
+  border-radius: 8px;
+  background: var(--principal);
+  color: white;
+  font-size: 16px;
+}
 
-/* Campos dentro de la ventana de editar */
+.btn-respaldo.secundario {
+  background: white;
+  color: var(--principal);
+  border: 2px solid var(--principal);
+}
+
+/* ===== Detalles de la reunión ===== */
+#titulo-reunion {
+  text-transform: capitalize;
+  margin: 6px 0 4px;
+  color: var(--principal);
+}
+
+#ultimo-cambio-reunion {
+  color: #777;
+  font-size: 13px;
+  margin: 0 0 4px;
+}
+
+#aviso-reunion {
+  background: var(--principal-claro);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  margin: 8px 0 0;
+}
+
+#pantalla-reunion label {
+  display: block;
+  font-weight: bold;
+  font-size: 14px;
+  color: var(--principal);
+  margin: 16px 0 4px;
+  border-left: 3px solid var(--principal);
+  padding-left: 8px;
+}
+
+#pantalla-reunion input,
+#pantalla-reunion textarea {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: white;
+  font-family: Arial, sans-serif;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+#pantalla-reunion textarea {
+  resize: vertical;
+}
+
+#pantalla-reunion input:focus,
+#pantalla-reunion textarea:focus {
+  outline: 2px solid var(--principal);
+  border-color: var(--principal);
+}
+
+/* Reunión en modo solo lectura */
+#pantalla-reunion input:disabled,
+#pantalla-reunion textarea:disabled {
+  background: #f7f7fb;
+  color: #222;
+  opacity: 1;
+  -webkit-text-fill-color: #222;
+}
+
+#btn-guardar-reunion {
+  margin-top: 20px;
+}
+
+/* ===== Ventanas de aviso (modal) ===== */
+.modal-fondo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  background: rgba(34, 28, 70, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: modal-aparecer 0.15s ease;
+}
+
+.modal-caja {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  animation: modal-subir 0.18s ease;
+}
+
+.modal-titulo {
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: var(--principal);
+}
+
+.modal-texto {
+  margin: 0 0 16px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: #333;
+  white-space: pre-line;
+}
+
 .modal-etiqueta {
   display: block;
   font-size: 13px;
   font-weight: bold;
   color: var(--principal);
   margin: 0 0 4px;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.modal-input:focus {
+  outline: 2px solid var(--principal);
+  border-color: var(--principal);
 }
 
 .fila-cumple {
@@ -1035,14 +871,70 @@ main {
   background: white;
 }
 
+.modal-botones {
+  display: flex;
+  gap: 8px;
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: var(--principal);
+  color: white;
+  font-size: 15px;
+}
+
+.modal-btn.secundario {
+  background: white;
+  color: var(--principal);
+  border: 2px solid var(--principal);
+}
+
+.modal-btn.peligro {
+  background: #d9534f;
+}
+
+@keyframes modal-aparecer {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-subir {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ===== Mensajito que se va solo ===== */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 80px;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  z-index: 90;
+  max-width: 90%;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.toast.visible {
+  opacity: 1;
+}
+
 /* ===== Tesorería ===== */
 #pantalla-tesoreria h3 {
   margin: 18px 0 8px;
   font-size: 16px;
 }
 
-.tarjeta-saldo,
-.tarjeta-cuotas {
+.tarjeta-saldo {
   background: white;
   border-radius: 12px;
   padding: 14px;
@@ -1061,7 +953,8 @@ main {
 }
 
 .saldo-fila {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
   margin-top: 10px;
 }
@@ -1077,6 +970,12 @@ main {
 }
 
 .saldo-dato:first-child {
+  background: var(--principal-claro);
+}
+
+/* Casilla "Ingreso por cuotas" (ocupa todo el ancho) */
+.saldo-dato.cuotas {
+  grid-column: 1 / -1;
   background: var(--principal-claro);
 }
 
@@ -1115,6 +1014,7 @@ main {
   border: 2px solid var(--principal);
 }
 
+/* Movimientos de caja */
 #lista-movimientos {
   list-style: none;
   padding: 0;
@@ -1130,6 +1030,14 @@ main {
   justify-content: space-between;
   align-items: center;
   gap: 8px;
+}
+
+#lista-movimientos li button {
+  background: var(--secundario);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
 }
 
 .mov-obs {
@@ -1158,76 +1066,7 @@ main {
   color: var(--principal);
 }
 
-#lista-movimientos li button {
-  background: var(--secundario);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 10px;
-}
-
-.tarjeta-cuotas label {
-  display: block;
-  font-size: 13px;
-  font-weight: bold;
-  color: var(--principal);
-  margin-bottom: 4px;
-}
-
-#tes-corista {
-  width: 100%;
-  padding: 12px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background: white;
-  margin-bottom: 12px;
-}
-
-.tes-meses {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-}
-
-.tes-meses button {
-  min-height: 44px;
-  padding: 8px 4px;
-  font-size: 13px;
-  border-radius: 8px;
-  border: 2px solid var(--principal);
-  background: white;
-  color: var(--principal);
-}
-
-.tes-meses button.pagado {
-  background: var(--principal);
-  color: white;
-}
-
-.cuotas-total {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px solid #eee;
-  font-size: 13px;
-  color: #666;
-}
-
-.cuotas-total strong {
-  font-size: 22px;
-  color: var(--principal);
-}
-
-.cuotas-detalle {
-  font-size: 12px;
-  color: #777;
-  margin-top: 2px;
-}
-
-/* ===== Tesorería: planilla de cuotas ===== */
+/* Cuotas mensuales */
 .cuota-valor {
   display: flex;
   justify-content: space-between;
@@ -1257,6 +1096,13 @@ main {
   font-size: 14px;
 }
 
+.cuotas-detalle {
+  font-size: 12px;
+  color: #777;
+  margin-top: 2px;
+}
+
+/* Planilla de cuotas */
 .planilla-envoltorio {
   background: white;
   border: 1px solid #ececf3;
@@ -1332,18 +1178,43 @@ main {
   background: var(--principal);
 }
 
+/* Meses que todavía no corresponden (antes de ingresar al coro) */
+.cuadro-mes.no-aplica {
+  border-color: #ccc;
+  background: #eee;
+}
+
 #planilla-cuotas tr.fila-panel td {
   background: var(--principal-claro);
   padding: 12px;
   text-align: left;
 }
 
-.panel-cuotas .tes-meses button {
-  background: white;
+.tes-meses {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
 }
 
-.panel-cuotas .tes-meses button.pagado {
+.tes-meses button {
+  min-height: 44px;
+  padding: 8px 4px;
+  font-size: 13px;
+  border-radius: 8px;
+  border: 2px solid var(--principal);
+  background: white;
+  color: var(--principal);
+}
+
+.tes-meses button.pagado {
   background: var(--principal);
+  color: white;
+}
+
+.panel-cuotas .tes-meses button.no-aplica {
+  border-color: #ddd;
+  background: #f4f4f8;
+  color: #aaa;
 }
 
 .panel-total {
@@ -1356,7 +1227,12 @@ main {
   color: var(--principal);
 }
 
-/* ===== Guardar cuotas y coristas que ya no están ===== */
+.panel-cambio {
+  font-size: 12px;
+  color: #777;
+  margin-top: 8px;
+}
+
 .btn-guardar-cuotas {
   display: block;
   width: 100%;
@@ -1369,17 +1245,7 @@ main {
   font-size: 15px;
 }
 
-.panel-cambio {
-  font-size: 12px;
-  color: #777;
-  margin-top: 8px;
-}
-
-#tes-ex-coristas h3 {
-  margin: 18px 0 8px;
-  font-size: 16px;
-}
-
+/* Coristas que ya no están (abajo de la planilla) */
 .ex-corista {
   background: white;
   border: 1px solid #ececf3;
@@ -1406,38 +1272,17 @@ main {
   margin-top: 3px;
 }
 
-/* ===== Meses que todavía no corresponden (antes de ingresar al coro) ===== */
-.cuadro-mes.no-aplica {
-  border-color: #ccc;
-  background: #eee;
+/* Título "Ya no están en el coro" dentro del resumen */
+#lista-resumen li.titulo-ex {
+  background: transparent;
+  font-weight: bold;
+  color: #666;
+  padding: 12px 4px 4px;
 }
 
-.panel-cuotas .tes-meses button.no-aplica {
-  border-color: #ddd;
-  background: #f4f4f8;
-  color: #aaa;
-}
-
-/* Que los botones de ingreso y salida se oculten de verdad para quienes no administran */
-.tes-botones.oculto {
-  display: none;
-}
-
-/* ===== Casilla "Ingreso por cuotas" ===== */
-.saldo-fila {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-}
-
-.saldo-dato.cuotas {
-  grid-column: 1 / -1;
-  background: var(--principal-claro);
-}
-
-/* Vigilias y registros plegables */
-.punto.vigilia { background: #7b4fd6; }
-.bloque.tipo-vigilia { border-left-color: #7b4fd6; }
-
-.bloque-encabezado.clicable {
-  cursor: pointer;
+.botones-corista {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
 }
