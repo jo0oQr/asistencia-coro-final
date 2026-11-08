@@ -1433,3 +1433,11 @@ main {
   grid-column: 1 / -1;
   background: var(--principal-claro);
 }
+
+/* Vigilias y registros plegables */
+.punto.vigilia { background: #7b4fd6; }
+.bloque.tipo-vigilia { border-left-color: #7b4fd6; }
+
+.bloque-encabezado.clicable {
+  cursor: pointer;
+}

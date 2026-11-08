@@ -184,6 +184,7 @@ const TIPOS = {
   culto: "Culto",
   reunion: "Reunión",
   ensayo: "Ensayo",
+  vigilia: "Vigilia",
   sinculto: "Sin culto"
 };
 
@@ -930,6 +931,9 @@ document.getElementById("add-reunion").addEventListener("click", function () {
 document.getElementById("add-ensayo").addEventListener("click", function () {
   crearActividad("ensayo");
 });
+document.getElementById("add-vigilia").addEventListener("click", function () {
+  crearActividad("vigilia");
+});
 document.getElementById("add-sinculto").addEventListener("click", function () {
   crearActividad("sinculto");
 });
@@ -947,7 +951,7 @@ const ESTADOS = {
 
 // El orden en que cambian los estados con cada toque
 const CICLO_CULTO = ["ausente", "subio", "abajo", "permiso"];
-const CICLO_SIMPLE = ["ausente", "asistio"];
+const CICLO_SIMPLE = ["ausente", "asistio", "permiso"];
 
 function buscarActividad() {
   return actividades.find(function (a) {
@@ -1270,6 +1274,8 @@ function seleccionarDia(fecha) {
   dibujarCalendario();
 }
 
+let bloquesAbiertos = new Set(); // actividades desplegadas en el detalle del día
+
 function dibujarDetalle() {
   const caja = document.getElementById("detalle-dia");
 
@@ -1315,15 +1321,18 @@ function dibujarDetalle() {
   }
 
   delDia.forEach(function (act) {
-    // Cada actividad va en su propio recuadro, con una franja de color según su tipo
     const bloque = document.createElement("section");
     bloque.className = "bloque tipo-" + act.tipo;
     caja.appendChild(bloque);
 
+    const tieneCuerpo = act.tipo !== "sinculto";
+    const abierto = bloquesAbiertos.has(act.id);
+
+    // Encabezado: siempre visible. Al tocarlo se despliega o se pliega
     const encabezado = document.createElement("div");
-    encabezado.className = "bloque-encabezado";
+    encabezado.className = "bloque-encabezado" + (tieneCuerpo ? " clicable" : "");
     const nombreTipo = document.createElement("h4");
-    nombreTipo.textContent = TIPOS[act.tipo];
+    nombreTipo.textContent = (tieneCuerpo ? (abierto ? "▾ " : "▸ ") : "") + TIPOS[act.tipo];
     encabezado.appendChild(nombreTipo);
     if (act.cerrada) {
       const sello = document.createElement("span");
@@ -1334,16 +1343,37 @@ function dibujarDetalle() {
     bloque.appendChild(encabezado);
 
     const cambio = textoUltimoCambio(act);
+
+    // "Sin culto" no tiene detalles que desplegar
+    if (!tieneCuerpo) {
+      if (cambio) {
+        const lineaCambio = document.createElement("p");
+        lineaCambio.className = "ultimo-cambio-detalle";
+        lineaCambio.textContent = cambio;
+        bloque.appendChild(lineaCambio);
+      }
+      return;
+    }
+
+    // Todo lo demás va dentro de este cuerpo, oculto mientras esté plegado
+    const cuerpo = document.createElement("div");
+    cuerpo.classList.toggle("oculto", !abierto);
+    bloque.appendChild(cuerpo);
+
+    encabezado.addEventListener("click", function () {
+      if (bloquesAbiertos.has(act.id)) {
+        bloquesAbiertos.delete(act.id);
+      } else {
+        bloquesAbiertos.add(act.id);
+      }
+      dibujarDetalle();
+    });
+
     if (cambio) {
       const lineaCambio = document.createElement("p");
       lineaCambio.className = "ultimo-cambio-detalle";
       lineaCambio.textContent = cambio;
-      bloque.appendChild(lineaCambio);
-    }
-
-    // "Sin culto" no tiene lista de coristas
-    if (act.tipo === "sinculto") {
-      return;
+      cuerpo.appendChild(lineaCambio);
     }
 
     // Datos de la reunión (si ya tiene detalles)
@@ -1382,7 +1412,7 @@ function dibujarDetalle() {
           ficha.appendChild(texto);
         }
 
-        bloque.appendChild(ficha);
+        cuerpo.appendChild(ficha);
       }
     }
 
@@ -1393,7 +1423,7 @@ function dibujarDetalle() {
     coristasDeLaFecha(act.fecha).forEach(function (corista) {
       const estado = estadoDe(act, corista);
       if (estado === "ausente") {
-        return; // solo mostramos a los que fueron o tuvieron permiso
+        return;
       }
       hayAlguien = true;
 
@@ -1410,12 +1440,12 @@ function dibujarDetalle() {
     });
 
     if (hayAlguien) {
-      bloque.appendChild(lista);
+      cuerpo.appendChild(lista);
     } else {
       const aviso = document.createElement("p");
       aviso.className = "vacio-detalle";
       aviso.textContent = "Todavía no hay coristas marcados.";
-      bloque.appendChild(aviso);
+      cuerpo.appendChild(aviso);
     }
 
     const acciones = document.createElement("div");
@@ -1437,7 +1467,7 @@ function dibujarDetalle() {
       acciones.appendChild(botonFicha);
     }
 
-    bloque.appendChild(acciones);
+    cuerpo.appendChild(acciones);
   });
 
   const botonActividades = document.createElement("button");
