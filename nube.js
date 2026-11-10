@@ -34,6 +34,8 @@ const firebaseConfig = {
 // Correo de la administradora (la única que ve los botones de eliminar).
 // Debe estar en minúsculas y ser el mismo que pusiste en las reglas de Firestore.
 const ADMIN_EMAIL = "josefa.ayline20@gmail.com";
+// Correos de quienes pueden modificar Tesorería además de la administradora (en minúsculas)
+const TESOREROS_EMAIL = ["heltonceb@gmail.com", "ben.monsalve@duocuc.cl"];
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -329,6 +331,7 @@ function prepararUsuario(usuario) {
 
   window.nombreUsuario = usuario.displayName || correo;
   window.soyAdmin = correo === ADMIN_EMAIL.toLowerCase();
+  window.puedeTesoreria = window.soyAdmin || TESOREROS_EMAIL.includes(correo);
 
   let el = document.getElementById("sesion-nube");
   if (!el) {

@@ -1,4 +1,4 @@
-const CACHE = "coro-v27";
+const CACHE = "coro-v28";
 const ARCHIVOS = [
   "./",
   "./index.html",
