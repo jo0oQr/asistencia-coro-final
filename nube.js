@@ -49,9 +49,15 @@ const db = initializeFirestore(app, {
 const guardarLocal = window.guardarDatos;
 
 let codigoCoro = null;
-const listo = { coristas: false, actividades: false };
-const decidido = { coristas: false, actividades: false };
-const estadoNube = { coristas: new Map(), actividades: new Map() };
+const NOMBRES_NUBE = ["coristas", "actividades", "movimientos", "cuotas", "valoresCuota"];
+const listo = {};
+const decidido = {};
+const estadoNube = {};
+NOMBRES_NUBE.forEach(function (n) {
+  listo[n] = false;
+  decidido[n] = false;
+  estadoNube[n] = new Map();
+});
 
 // ----- Mensajito de estado en el encabezado -----
 function mostrarEstado(texto) {
@@ -83,7 +89,11 @@ function avisarError(error) {
 
 // ----- Ayudas -----
 function listaLocal(nombre) {
-  return nombre === "coristas" ? coristas : actividades;
+  if (nombre === "coristas") return coristas;
+  if (nombre === "actividades") return actividades;
+  if (nombre === "movimientos") return movimientos;
+  if (nombre === "cuotas") return cuotas;
+  return valoresCuota;
 }
 
 function coleccion(nombre) {
@@ -132,7 +142,7 @@ function enviarCambios(nombre, lista) {
 // Cada vez que app.js guarda coristas o actividades, también las subimos
 window.guardarDatos = function (clave, valor) {
   guardarLocal(clave, valor);
-  if (clave === "coristas" || clave === "actividades") {
+  if (NOMBRES_NUBE.includes(clave)) {
     enviarCambios(clave, valor);
   }
 };
@@ -158,6 +168,9 @@ function redibujar() {
   }
   if (pantallaVisible("pantalla-resumen")) {
     dibujarResumenMensual();
+  }
+  if (pantallaVisible("pantalla-tesoreria")) {
+    dibujarTesoreria();
   }
 }
 
@@ -257,6 +270,9 @@ function iniciar() {
   }
   escuchar("coristas");
   escuchar("actividades");
+  escuchar("movimientos");
+  escuchar("cuotas");
+  escuchar("valoresCuota");
 }
 
 mostrarEstado("☁️ Conectando…");
@@ -331,7 +347,7 @@ function prepararUsuario(usuario) {
 
   window.nombreUsuario = usuario.displayName || correo;
   window.soyAdmin = correo === ADMIN_EMAIL.toLowerCase();
-  window.puedeTesoreria = window.soyAdmin || TESOREROS_EMAIL.includes(correo);
+  window.accesoTesoreria = window.soyAdmin || TESOREROS_EMAIL.includes(correo);
 
   let el = document.getElementById("sesion-nube");
   if (!el) {

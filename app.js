@@ -232,6 +232,11 @@ function esAdmin() {
   return window.soyAdmin === true;
 }
 
+  // Solo la administradora y el tesorero modifican Tesorería
+  function puedeTesoreria() {
+    return window.accesoTesoreria === true;
+  }
+
 // Las reuniones solo las modifica la administradora; las demás personas solo las ven
 function soloVerReunion(act) {
   return act.tipo === "reunion" && !esAdmin();
@@ -2111,7 +2116,7 @@ function totalCuotasRecaudadas() {
 }
 
 function dibujarTesoreria() {
-  const admin = esAdmin();
+  const admin = puedeTesoreria();
   document.getElementById("tes-botones").classList.toggle("oculto", !admin);
   document.getElementById("btn-cambiar-cuota").classList.toggle("oculto", !admin);
 
@@ -2433,8 +2438,8 @@ function dibujarPlanilla() {
           if (noAplica) {
             return; // todavía no estaba en el coro
           }
-          if (!esAdmin()) {
-            mostrarToast("Solo la administradora puede marcar cuotas");
+          if (!puedeTesoreria()) {
+            mostrarToast("Solo la administradora y el tesorero pueden marcar cuotas");
             return;
           }
           borradorCuotas[i] = !borradorCuotas[i];
@@ -2460,7 +2465,7 @@ function dibujarPlanilla() {
         panel.appendChild(notaIngreso);
       }
 
-      if (esAdmin()) {
+      if (puedeTesoreria()) {
         const guardar = document.createElement("button");
         guardar.className = "btn-guardar-cuotas";
         guardar.textContent = cuotasSinGuardar ? "Guardar cuotas" : "Cerrar";
@@ -2490,7 +2495,7 @@ function dibujarPlanilla() {
 }
 
 function guardarCuotas(coristaId) {
-  if (!esAdmin()) {
+  if (!puedeTesoreria()) {
     return;
   }
 
@@ -2510,8 +2515,8 @@ function guardarCuotas(coristaId) {
 }
 
 async function cambiarValorCuota() {
-  if (!esAdmin()) {
-    avisar("Solo la administradora puede cambiar el valor de la cuota.", "Sin permiso");
+  if (!puedeTesoreria()) {
+    avisar("Solo la administradora y el tesorero pueden cambiar el valor de la cuota.", "Sin permiso");
     return;
   }
 
@@ -2545,8 +2550,8 @@ async function cambiarValorCuota() {
 }
 
 async function agregarMovimiento(tipo, valores) {
-  if (!esAdmin()) {
-    avisar("Solo la administradora puede registrar movimientos.", "Sin permiso");
+  if (!puedeTesoreria()) {
+    avisar("Solo la administradora y el tesorero pueden registrar movimientos.", "Sin permiso");
     return;
   }
 
@@ -2638,8 +2643,8 @@ async function agregarMovimiento(tipo, valores) {
 }
 
 async function quitarMovimiento(id) {
-  if (!esAdmin()) {
-    avisar("Solo la administradora puede quitar movimientos.", "Sin permiso");
+  if (!puedeTesoreria()) {
+    avisar("Solo la administradora y el tesorero pueden quitar movimientos.", "Sin permiso");
     return;
   }
   const seguro = await confirmar("Se borrará de la lista y cambiará el saldo en caja.", {
